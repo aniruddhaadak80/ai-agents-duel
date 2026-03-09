@@ -400,3 +400,16 @@ section:last-child {
   transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
   z-index: 10;
 }
+
+.glitch-text {
+  animation: glitch-skew 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+  color: red;
+}
+@keyframes glitch-skew {
+  0% { transform: skew(0deg); }
+  20% { transform: skew(-20deg); }
+  40% { transform: skew(20deg); }
+  60% { transform: skew(-10deg); }
+  80% { transform: skew(10deg); }
+  100% { transform: skew(0deg); }
+}

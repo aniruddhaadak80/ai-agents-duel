@@ -42,6 +42,9 @@ export function AgentCommandCenter({ mode = "home" }: CommandCenterProps) {
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
   const [objective, setObjective] = useState("Draft an unconventional narrative...");
   
+  const [customSwarmAgents, setCustomSwarmAgents] = useState<string[]>([]);
+  const [customSwarmObjective, setCustomSwarmObjective] = useState("Scan global networks and execute an algorithmic market hedge...");
+
   const [combatantA, setCombatantA] = useState<string | null>(null);
   const [combatantB, setCombatantB] = useState<string | null>(null);
   const [liveLogTicker, setLiveLogTicker] = useState<string[]>([
@@ -152,6 +155,22 @@ export function AgentCommandCenter({ mode = "home" }: CommandCenterProps) {
     }
   }
 
+  const toggleCustomAgent = (id: string) => {
+    setCustomSwarmAgents(prev => prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]);
+  };
+
+  async function handleCustomSwarm() {
+    if (customSwarmAgents.length === 0 || !customSwarmObjective.trim()) {
+      return setError("Select at least one agent and define an objective.");
+    }
+    const tasks = customSwarmAgents.map(agentId => ({
+      agentId,
+      objective: customSwarmObjective
+    }));
+    await handleSimulateSwarm("CUSTOM PROTOCOL", tasks);
+    setCustomSwarmAgents([]);
+  }
+
   async function handleCreateRun() {
     if (!selectedAgentId || !objective.trim()) return;
     setError(null);
@@ -218,8 +237,14 @@ export function AgentCommandCenter({ mode = "home" }: CommandCenterProps) {
           </button>
           <a href="#controls" className="sketch-btn secondary">Draw Prompt</a>
         </div>
-        <div style={{ marginTop: '2rem' }}>
-          <strong>Active Drafts: </strong>{numberFormatter.format(snapshot?.metrics.runningNow ?? 0)}
+        
+        {/* Global Telemetry Radar */}
+        <div style={{ marginTop: '3rem', display: 'flex', gap: '2rem', justifyContent: 'center', flexWrap: 'wrap', fontFamily: 'monospace', fontSize: '1.1rem', background: '#000', color: '#0f0', padding: '1rem 2rem', borderRadius: '8px', border: '2px solid #0f0', boxShadow: '5px 5px 0px 0px rgba(0,255,0,0.3)', transform: "rotate(-1deg)", maxWidth: "800px", margin: "3rem auto" }}>
+          <div><strong>UPTIME:</strong> <span className={glitchMode ? "glitch-text" : ""}>{new Date().toISOString().split('T')[1].split('.')[0]}</span></div>
+          <div><strong>ACTIVE AGENTS:</strong> {snapshot?.metrics.activeAgents ?? 0}/4</div>
+          <div><strong>TASKS RUNNING:</strong> {numberFormatter.format(snapshot?.metrics.runningNow ?? 0)}</div>
+          <div><strong>GLOBAL CONFIDENCE:</strong> {snapshot?.metrics.averageConfidence ?? 0}%</div>
+          <div><strong>PROTOCOL:</strong> <span style={{ color: "var(--accent-orange)" }}>{snapshot?.controls.autonomyMode.toUpperCase() ?? 'AWAITING'}</span></div>
         </div>
       </section>
 
@@ -327,8 +352,59 @@ export function AgentCommandCenter({ mode = "home" }: CommandCenterProps) {
               { agentId: "signal-curator", objective: "Audit developer pull request for backward-compatibility breaks." }
             ])}>Ship Feature</button>
           </div>
+          
+          {/* Use Case 4: FinTech / Quant Trading */}
+          <div className="sketch-card float-anim" style={{ transform: "rotate(1deg)", background: "#1a1a1a", color: "#00ffcc" }}>
+            <h3 style={{color: "#00ffcc"}}>💰 Quant AI</h3>
+            <p style={{color: "#aaa", marginBottom: "1rem" }}>High-frequency sentiment + execution bots.</p>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
+               <span style={{ fontSize: "0.8rem", background: "#00ffcc", color: "#000", padding: "2px 6px", borderRadius: "10px" }}>News Scraper</span>
+               <span style={{ fontSize: "0.8rem", background: "#00ffcc", color: "#000", padding: "2px 6px", borderRadius: "10px" }}>Algorithmic Trader</span>
+            </div>
+            <button className="sketch-btn" style={{ background: "#00ffcc", color: "#000", border: "2px solid #00ffcc" }} onClick={() => handleSimulateSwarm("Quant Hedge", [
+              { agentId: "signal-curator", objective: "Analyze Twitter and Bloomberg feeds for semiconductor supply chain disruption." },
+              { agentId: "vector-ops", objective: "Execute correlated micro-trades against NVDA and ASML instantly." }
+            ])}>Execute Hedge</button>
+          </div>
+          
+          {/* Use Case 5: Medical / BioTech */}
+          <div className="sketch-card float-anim" style={{ transform: "rotate(-1deg)", background: "#ffe0f0" }}>
+            <h3 style={{color: "#d61c6b"}}>🧬 BioTech AI</h3>
+            <p style={{color: "#801241", marginBottom: "1rem" }}>Protein folding prediction & clinical auditing.</p>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
+               <span style={{ fontSize: "0.8rem", background: "#d61c6b", color: "#fff", padding: "2px 6px", borderRadius: "10px" }}>Molecular Sim</span>
+               <span style={{ fontSize: "0.8rem", background: "#d61c6b", color: "#fff", padding: "2px 6px", borderRadius: "10px" }}>Trial Auditor</span>
+            </div>
+            <button className="sketch-btn primary" onClick={() => handleSimulateSwarm("BioTech Gen", [
+              { agentId: "relay-console", objective: "Simulate folding permutations for experimental enzyme #44B." },
+              { agentId: "atlas-story", objective: "Compile simulation data into FDA-compliant clinical readouts." }
+            ])}>Run Trials</button>
+          </div>
 
         </div>
+        
+        {/* Custom Swarm Matrix Sandbox */}
+        <div className="sticky-note-form custom-swarm-builder float-anim" style={{ maxWidth: "100%", marginTop: "3rem", background: "url('data:image/svg+xml;utf8,<svg width=\"20\" height=\"20\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"2\" cy=\"2\" r=\"1\" fill=\"rgba(0,0,0,0.1)\"/></svg>')", backgroundColor: "#fafafa" }}>
+           <h3 style={{ fontSize: '2.5rem', marginBottom: '1rem', color: "var(--accent-purple)", textAlign: "center" }}>🧪 Custom Swarm Sandbox</h3>
+           <p style={{textAlign: "center", marginBottom: "2rem"}}>Hand-pick your own network of agents and orchestrate an autonomous mass-deployment.</p>
+           
+           <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", justifyContent: "center", marginBottom: "2rem" }}>
+             {snapshot?.agents.map(a => (
+               <label key={a.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", border: "2px solid #ccc", borderRadius: "15px", cursor: "pointer", background: customSwarmAgents.includes(a.id) ? "var(--accent-purple)" : "#fff", color: customSwarmAgents.includes(a.id) ? "#fff" : "#000", fontWeight: "bold", transition: "all 0.2s ease" }}>
+                 <input type="checkbox" style={{ accentColor: "black", width: "20px", height: "20px" }} checked={customSwarmAgents.includes(a.id)} onChange={() => toggleCustomAgent(a.id)} />
+                 {a.name}
+               </label>
+             ))}
+           </div>
+
+           <label><strong>Unified Prime Directive:</strong></label>
+           <textarea rows={3} value={customSwarmObjective} onChange={(e) => setCustomSwarmObjective(e.target.value)} style={{ borderColor: "var(--accent-purple)", borderBottomWidth: "4px" }}></textarea>
+           
+           <button className="sketch-btn danger" style={{ width: '100%', textAlign: 'center', boxSizing: 'border-box', background: "var(--accent-purple)", color: "white", textTransform: "uppercase", letterSpacing: "1px", fontSize: "1.3rem" }} onClick={() => void handleCustomSwarm()} disabled={isSubmitting || customSwarmAgents.length === 0}>
+             ⚠️ Initialize Custom Protocol
+           </button>
+        </div>
+
       </section>
 
       {/* Contact Form / Sticky Note Controls */}
