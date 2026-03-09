@@ -442,3 +442,17 @@ export function triggerDuel(agent1Id: string, agent2Id: string) {
     duelLog: `CRITICAL OVERRIDE: [${winner.name}] annihilated [${loser.name}]. ${loser.name} network degraded and queued flooded.`
   };
 }
+
+export function updateRunRealAI(runId: string, aiText: string) {
+  const run = state.runs.find(r => r.id === runId);
+  if (!run) return;
+  run.summary = aiText;
+  run.status = "completed";
+  run.finishedAt = new Date().toISOString();
+  run.events.unshift("Real LLM output generated.");
+  const agent = state.agents.find(a => a.id === run.agentId);
+  if (agent) {
+    agent.status = "ready";
+    agent.queueDepth = Math.max(0, agent.queueDepth - 1);
+  }
+}

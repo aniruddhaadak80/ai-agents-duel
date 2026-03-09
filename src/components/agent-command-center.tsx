@@ -287,13 +287,7 @@ export function AgentCommandCenter({ mode = "home" }: CommandCenterProps) {
                   <p><strong>Confidence:</strong> {run.confidence}%</p>
                 </div>
               </div>
-              <div className="polaroid-desc">
-                 <h4 style={{ fontSize: '2rem' }}>Event Log</h4>
-                 <ul style={{ listStyleType: "none", padding: 0 }}>
-                   {run.events.map((ev, i) => <li key={i} style={{ marginBottom: "0.5rem" }}>⚡ {ev}</li>)}
-                 </ul>
-              </div>
-            </div>
+              <div className="polaroid-desc" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}><div><h4 style={{ fontSize: "2rem", color: "var(--accent-purple)" }}>Agent Output</h4><p style={{ whiteSpace: "pre-wrap", background: "#f0f0f0", padding: "1rem", borderRadius: "8px", border: "1px solid #ccc", fontFamily: "monospace", fontSize: "0.9rem", color: "#000" }}>{run.summary}</p></div><div><h4 style={{ fontSize: "2rem" }}>Event Log</h4><ul style={{ listStyleType: "none", padding: 0 }}>{run.events.map((ev, i) => <li key={i} style={{ marginBottom: "0.5rem" }}>? {ev}</li>)}</ul></div></div></div>
           ))}
         </div>
       </section>
@@ -475,3 +469,4 @@ export function AgentCommandCenter({ mode = "home" }: CommandCenterProps) {
     </main>
   );
 }
+
