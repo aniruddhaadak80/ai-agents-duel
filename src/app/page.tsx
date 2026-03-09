@@ -1,3 +1,5 @@
+import { Reveal } from "@/components/reveal";
+
 const leftWorkflow = [
   {
     index: "01",
@@ -93,49 +95,57 @@ export default function Home() {
       </header>
 
       <section className="hero split-section">
-        <div className="side side-a hero-panel reveal-left">
+        <Reveal side="left" className="side side-a hero-panel">
           <p className="kicker">Side A / Narrative Operators</p>
           <h1>
             Agent
             <br />
             Theatre
           </h1>
-          <p className="hero-copy hero-copy-delay">
-            Build an interface where orchestration feels authored, tactile, and human-led.
-          </p>
-        </div>
-        <div className="side side-b hero-panel hero-panel-right reveal-right">
+          <Reveal side="left" delayMs={100}>
+            <p className="hero-copy">
+              Build an interface where orchestration feels authored, tactile, and human-led.
+            </p>
+          </Reveal>
+        </Reveal>
+        <Reveal side="right" className="side side-b hero-panel hero-panel-right">
           <p className="kicker">SIDE B / SYSTEM OPERATORS</p>
           <h2>
             AGENT
             <br />
             MACHINE
           </h2>
-          <p className="hero-copy hero-copy-delay">
-            Compose reliable workflows, telemetry surfaces, and tool contracts around each autonomous step.
-          </p>
-        </div>
+          <Reveal side="right" delayMs={100}>
+            <p className="hero-copy">
+              Compose reliable workflows, telemetry surfaces, and tool contracts around each autonomous step.
+            </p>
+          </Reveal>
+        </Reveal>
       </section>
 
       <section className="workflow split-section">
         <div className="side side-a workflow-column">
           {leftWorkflow.map((item, index) => (
-            <article key={item.index} className={`workflow-block reveal-left workflow-a-${index + 1}`}>
-              <span className="workflow-index">{item.index}</span>
-              <p className="workflow-eyebrow">{item.eyebrow}</p>
-              <h3>{item.title}</h3>
-              <p>{item.body}</p>
-            </article>
+            <Reveal key={item.index} side="left" className={`workflow-block workflow-a-${index + 1}`}>
+              <article>
+                <span className="workflow-index">{item.index}</span>
+                <p className="workflow-eyebrow">{item.eyebrow}</p>
+                <h3>{item.title}</h3>
+                <p>{item.body}</p>
+              </article>
+            </Reveal>
           ))}
         </div>
         <div className="side side-b workflow-column workflow-column-offset">
           {rightWorkflow.map((item, index) => (
-            <article key={item.index} className={`workflow-block reveal-right workflow-b-${index + 1}`}>
-              <span className="workflow-index">{item.index}</span>
-              <p className="workflow-eyebrow">{item.eyebrow}</p>
-              <h3>{item.title}</h3>
-              <p>{item.body}</p>
-            </article>
+            <Reveal key={item.index} side="right" className={`workflow-block workflow-b-${index + 1}`}>
+              <article>
+                <span className="workflow-index">{item.index}</span>
+                <p className="workflow-eyebrow">{item.eyebrow}</p>
+                <h3>{item.title}</h3>
+                <p>{item.body}</p>
+              </article>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -143,24 +153,28 @@ export default function Home() {
       <section className="profiles split-section">
         <div className="side side-a profile-column">
           {leftProfiles.map((profile) => (
-            <article key={profile.title} className="profile-card reveal-left">
-              <h3>{profile.title}</h3>
-              <p>{profile.body}</p>
-            </article>
+            <Reveal key={profile.title} side="left" className="profile-card">
+              <article>
+                <h3>{profile.title}</h3>
+                <p>{profile.body}</p>
+              </article>
+            </Reveal>
           ))}
         </div>
         <div className="side side-b profile-column profile-column-offset">
           {rightProfiles.map((profile) => (
-            <article key={profile.title} className="profile-card reveal-right">
-              <h3>{profile.title}</h3>
-              <p>{profile.body}</p>
-            </article>
+            <Reveal key={profile.title} side="right" className="profile-card">
+              <article>
+                <h3>{profile.title}</h3>
+                <p>{profile.body}</p>
+              </article>
+            </Reveal>
           ))}
         </div>
       </section>
 
       <section className="outcomes split-section">
-        <div className="side side-a outcome-panel reveal-left">
+        <Reveal side="left" className="side side-a outcome-panel">
           <p className="section-label">Outcome Statements</p>
           <p className="outcome-lead">
             The best agent interface does not flatten difference. It stages intuition and infrastructure in productive conflict.
@@ -168,15 +182,15 @@ export default function Home() {
           <p className="outcome-lead secondary">
             One side persuades humans. The other side persuades systems.
           </p>
-        </div>
-        <div className="side side-b outcome-panel reveal-right">
+        </Reveal>
+        <Reveal side="right" className="side side-b outcome-panel">
           <p className="section-label">OUTPUT LOG</p>
           <ul className="outcome-list">
             {rightOutcomes.map((item) => (
               <li key={item}>{item}</li>
             ))}
           </ul>
-        </div>
+        </Reveal>
       </section>
 
       <section className="choice-moment">
@@ -187,18 +201,18 @@ export default function Home() {
       </section>
 
       <section className="cta split-section final-cta">
-        <div className="side side-a reveal-left cta-left">
+        <Reveal side="left" className="side side-a cta-left">
           <p className="section-label">Choose a voice</p>
           <a href="#" className="cta-text-link">
             Enter the narrative workflow
           </a>
-        </div>
-        <div className="side side-b reveal-right cta-right">
+        </Reveal>
+        <Reveal side="right" className="side side-b cta-right">
           <p className="section-label">CHOOSE A SYSTEM</p>
           <button type="button" className="cta-button">
             LAUNCH OPERATOR CONSOLE
           </button>
-        </div>
+        </Reveal>
       </section>
     </main>
   );
