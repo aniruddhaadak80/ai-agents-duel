@@ -32,6 +32,12 @@ a {
 button {
   font: inherit;
   background: none;
+  border: 0;
+  padding: 0;
+}
+
+a {
+  text-decoration: none;
 }
 
 .duel-shell {
@@ -63,6 +69,10 @@ button {
   text-transform: uppercase;
   mix-blend-mode: difference;
   color: #fff;
+}
+
+.top-nav a {
+  color: inherit;
 }
 
 .tension-line {
@@ -159,6 +169,111 @@ button {
   font-size: 1rem;
   line-height: 1.7;
   font-family: var(--font-ui), sans-serif;
+}
+
+.hero-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  width: min(100%, 34rem);
+  margin: 2.5rem 0 0;
+}
+
+.hero-metrics div {
+  padding-top: 1rem;
+  border-top: 1px solid currentColor;
+}
+
+.hero-metrics dt {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-ui), sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.hero-metrics dd {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1;
+}
+
+.hero-metrics-left dd {
+  font-family: var(--font-expressive), serif;
+}
+
+.hero-metrics-right dd {
+  font-family: var(--font-utilitarian), monospace;
+}
+
+.status-strip .side {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+.strip-panel {
+  border-top: 1px solid var(--light-divider);
+}
+
+.strip-panel-right {
+  border-top: 1px solid var(--dark-divider);
+}
+
+.strip-copy {
+  margin: 0;
+  font-family: var(--font-expressive), serif;
+  font-size: clamp(1.35rem, 2vw, 1.8rem);
+  line-height: 1.25;
+}
+
+.status-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.utility-button,
+.micro-button,
+.toggle-chip,
+.cta-button-link {
+  cursor: pointer;
+}
+
+.utility-button {
+  padding-bottom: 0.2rem;
+  border-bottom: 2px solid currentColor;
+  font-family: var(--font-utilitarian), monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.inline-status {
+  font-family: var(--font-utilitarian), monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.section-intro {
+  padding-top: 2rem;
+  border-top: 1px solid currentColor;
+}
+
+.section-copy {
+  max-width: 28rem;
+  margin: 0;
+  font-family: var(--font-expressive), serif;
+  font-size: 1.15rem;
+  line-height: 1.6;
+}
+
+.section-copy-mono {
+  font-family: var(--font-utilitarian), monospace;
+  font-size: 0.9rem;
+  line-height: 1.9;
+  text-transform: lowercase;
 }
 
 .workflow {
@@ -262,6 +377,290 @@ button {
 
 .profile-card {
   padding-top: 2rem;
+}
+
+.agent-card.is-selected,
+.run-card.is-selected {
+  outline: 2px solid var(--accent);
+  outline-offset: 0.5rem;
+}
+
+.agent-card-head,
+.run-card-head,
+.run-detail-head,
+.composer-actions,
+.agent-stats,
+.detail-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.agent-select,
+.run-select {
+  display: block;
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+}
+
+.agent-meta {
+  margin: 0 0 1rem;
+  font-family: var(--font-ui), sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.agent-stats,
+.agent-stats-mono,
+.detail-metrics {
+  font-family: var(--font-ui), sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.agent-stats-mono,
+.detail-metrics,
+.run-confidence,
+.run-objective,
+.helper-copy-mono,
+.event-list,
+.control-field span,
+.toggle-chip,
+.status-pill,
+.micro-button,
+.run-card p:nth-of-type(1) {
+  font-family: var(--font-utilitarian), monospace;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid currentColor;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.is-live {
+  color: var(--accent);
+}
+
+.is-ready {
+  color: inherit;
+}
+
+.is-muted {
+  color: #757575;
+}
+
+.is-warn,
+.is-review {
+  color: var(--accent);
+}
+
+.micro-button {
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid currentColor;
+  font-size: 0.76rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.operator-panel,
+.run-detail-panel {
+  border-top: 1px solid currentColor;
+  padding-top: 2rem;
+}
+
+.selected-agent-panel {
+  margin-bottom: 1.5rem;
+}
+
+.selected-agent-kicker,
+.field-label {
+  display: block;
+  margin: 0 0 0.75rem;
+  font-family: var(--font-ui), sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.selected-agent-panel h3,
+.run-list h3,
+.run-detail-head h3 {
+  margin: 0 0 0.75rem;
+}
+
+.selected-agent-panel h3,
+.run-list h3 {
+  font-family: var(--font-expressive), serif;
+  font-size: clamp(2rem, 3vw, 2.75rem);
+  line-height: 1;
+}
+
+.run-detail-head h3 {
+  font-family: var(--font-utilitarian), monospace;
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  line-height: 1.1;
+}
+
+.duel-textarea,
+.control-field select {
+  width: 100%;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+}
+
+.duel-textarea {
+  min-height: 12rem;
+  padding: 1rem;
+  resize: vertical;
+  font-family: var(--font-ui), sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.control-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.control-field {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.control-field select {
+  padding: 0.9rem 1rem;
+  font-family: var(--font-utilitarian), monospace;
+  font-size: 0.95rem;
+  text-transform: lowercase;
+}
+
+.toggle-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.toggle-chip {
+  padding: 0.75rem 0.9rem;
+  border: 1px solid currentColor;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.toggle-chip.is-active,
+.cta-button-link:hover {
+  background: var(--accent);
+  color: var(--ink);
+}
+
+.helper-copy {
+  margin: 0;
+  color: inherit;
+  opacity: 0.78;
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.cta-text-button {
+  padding-bottom: 0.15rem;
+  border-bottom: 2px solid currentColor;
+  font-family: var(--font-expressive), serif;
+  font-size: clamp(1.4rem, 2vw, 1.9rem);
+  font-style: italic;
+  cursor: pointer;
+}
+
+.run-list {
+  display: grid;
+  gap: 2rem;
+}
+
+.run-card {
+  padding-top: 2rem;
+  border-top: 1px solid var(--light-divider);
+}
+
+.run-card p,
+.selected-agent-panel p {
+  margin: 0 0 0.8rem;
+}
+
+.run-detail-panel {
+  min-height: 100%;
+}
+
+.run-objective,
+.detail-output {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  line-height: 1.9;
+}
+
+.step-list {
+  display: grid;
+  gap: 0.65rem;
+  margin: 1.5rem 0;
+}
+
+.step-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 0;
+  border-top: 1px solid var(--dark-divider);
+  font-family: var(--font-utilitarian), monospace;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.step-done {
+  color: var(--fog);
+}
+
+.step-active,
+.step-waiting {
+  color: var(--accent);
+}
+
+.event-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.82rem;
+  line-height: 1.8;
+  text-transform: lowercase;
+}
+
+.event-list li {
+  padding-left: 1rem;
+  border-left: 2px solid var(--accent);
+}
+
+.cta-button-link {
+  display: inline-flex;
+  width: fit-content;
+  padding: 1rem 1.5rem;
+  border: 1px solid #333;
+  font-family: var(--font-utilitarian), monospace;
+  font-size: 0.95rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transition: background-color 300ms ease, color 300ms ease;
 }
 
 .side-a .profile-card h3 {
@@ -436,7 +835,7 @@ button {
     mix-blend-mode: normal;
   }
 
-  .top-nav span:last-child {
+  .top-nav > :last-child {
     display: none;
   }
 
@@ -475,6 +874,29 @@ button {
   .workflow-column-offset,
   .profile-column-offset {
     padding-top: 0;
+  }
+
+  .hero-metrics,
+  .status-actions,
+  .agent-card-head,
+  .run-card-head,
+  .run-detail-head,
+  .composer-actions,
+  .agent-stats,
+  .detail-metrics,
+  .toggle-grid {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .agent-card.is-selected,
+  .run-card.is-selected {
+    outline-offset: 0.25rem;
+  }
+
+  .run-list {
+    gap: 1.5rem;
   }
 
   .choice-moment {

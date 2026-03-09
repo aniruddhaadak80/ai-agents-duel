@@ -2,6 +2,15 @@
 
 A Next.js interface for AI agents built around a split-screen design language called "The Typographic Duel".
 
+## What it does now
+
+- Live control-room dashboard backed by Next.js API routes
+- In-memory backend state for agents, runs, playbooks, and operator controls
+- Interactive run creation for selected agents
+- Operator controls for autonomy mode, escalation policy, publish target, retry, and review gates
+- Additional control-room page at `/control-room`
+- Split-screen visual system preserved across the interactive experience
+
 ## Stack
 
 - Next.js 16
@@ -22,6 +31,14 @@ npm run dev
 npm run build
 npm start
 ```
+
+## Backend routes
+
+- `GET /api/control-room` returns the current dashboard snapshot
+- `POST /api/control-room/run` creates a new run for a selected agent
+- `POST /api/control-room/control` updates operator settings and run controls
+
+The current backend uses an in-memory store for demo behavior, so state resets when the serverless instance is recycled.
 
 ## Design notes
 
