@@ -1,66 +1,64 @@
-# AI Agents Duel
+# ??? AI Agents Duel: Digital Sketchbook Edition
 
-A Next.js interface for AI agents built around a split-screen design language called "The Typographic Duel".
+![Next.js](https://img.shields.io/badge/next.js-16+-black) ![TypeScript](https://img.shields.io/badge/typescript-5.x-blue) ![React](https://img.shields.io/badge/react-19-cyan) ![UI](https://img.shields.io/badge/ui-digital--sketchbook-orange)
 
-## What it does now
+An interactive, narrative-driven AI Agent command center that completely abandons sterile corporate UI in favor of a **Digital Sketchbook** aesthetic. 
 
-- Live control-room dashboard backed by Next.js API routes
-- In-memory backend state for agents, runs, playbooks, and operator controls
-- Interactive run creation for selected agents
-- Operator controls for autonomy mode, escalation policy, publish target, retry, and review gates
-- Additional control-room page at `/control-room`
-- Split-screen visual system preserved across the interactive experience
+Live Demo: [ai-agents-duel.vercel.app](https://ai-agents-duel.vercel.app)
 
-## Stack
+---
 
-- Next.js 16
-- React 19
-- TypeScript
-- next/font with Cinzel, Inter, and Space Mono
+## ? Standout Features
 
-## Local development
+Instead of standard data tables and flat colors, this project treats your AI agents like characters in a chaotic, creative workspace:
 
-```bash
-npm install
-npm run dev
-```
+- **?? The Digital Sketchbook UI:** Features custom CSS-driven "wobbly" borders, pinned "tape" on polaroid containers, floating elements, and a handcrafted web-font stack (*Kalam* & *Patrick Hand*) that mimics physical paper and pen.
+- **?? Neural Live Wire:** A cyberpunk-inspired ticker anchored to the screen that constantly broadcasts the live, internal thoughts/actions of your agents.
+- **?? Agent Apex Arena (Scribble Battles):** An integrated mini-game where two agents duel in the backend. The winner gets a buffed Success Rate, while the loser suffers network degradation and queue-depth floods.
+- **?? System Meltdown (Ink Spill):** A "Pulse" button that injects pure chaos into the in-memory store. It fires off CSS keyframe hardware-shakes, sepia CRT filters, and randomly disrupts agent queues.
+- **?? Operator's Desk:** Create simulated tasks/prompts for your agents and watch them appear as freshly taped Polaroid shots in the project gallery.
 
-## Production build
+## ?? How to Run It Locally
 
-```bash
-npm run build
-npm start
-```
+1. **Clone the repository:**
+   \\\ash
+   git clone https://github.com/aniruddhaadak80/ai-agents-duel.git
+   cd ai-agents-duel
+   \\\
+2. **Install dependencies:**
+   \\\ash
+   npm install
+   \\\
+3. **Start the development server:**
+   \\\ash
+   npm run dev
+   \\\
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Backend routes
+## ?? How Can I Use This?
 
-- `GET /api/control-room` returns the current dashboard snapshot
-- `POST /api/control-room/run` creates a new run for a selected agent
-- `POST /api/control-room/control` updates operator settings and run controls
+This project is built around an **In-Memory Store Pattern** (\src/lib/agent-duel/store.ts\). Right now, it perfectly simulates a backend without needing a database. Here is how you can use or extend it:
 
-The current backend uses an in-memory store for demo behavior, so state resets when the serverless instance is recycled.
+### 1. The Presentation Mockup
+Need to pitch a multi-agent system to investors or stakeholders? Use this exact dashboard out-of-the-box. The animations, interactive dueling, and dynamic UI elements make it an incredible showcase tool to explain how "Supervisor vs. Worker" agents operate.
 
-## Design notes
+### 2. Plug in Real LLMs
+It is structured ready for real intelligence. To hook this up to OpenAI or Anthropic:
+- Navigate to \src/app/api/control-room/run/route.ts\.
+- Instead of relying on the mock \createRun\ function, inject your LLM call there.
+- Pass the user's \objective\ to your LLM framework (like LangChain, AutoGen, or raw OpenAI API) and return the response back to the UI to be glued onto the Sketchpad.
 
-- Permanent 50/50 split on desktop
-- Fixed accent tension line at the center
-- Warm serif narrative system on the left
-- Dark monospace operational system on the right
-- No gradients, no shadows, no rounded corners
+### 3. Steal the UI Architecture
+The \globals.css\ file contains an incredible amount of distinct styling: \order-radius\ tricks for a hand-drawn look, hard-shadow interactions, and complex CSS keyframe animations (like paper jitter and tape effects). You can comfortably extract this design system and drop it into your own Next.js or React projects.
 
-## Deployment
+## ?? Tech Stack
 
-If Vercel CLI is authenticated:
+- **Framework:** Next.js 16 (App Router)
+- **Language:** TypeScript
+- **Styling:** Pure CSS (CSS Variables, keyframes)
+- **Fonts:** \
+ext/font/google\ (Kalam, Patrick Hand)
+- **Deployment:** Vercel
 
-```bash
-vercel
-```
-
-If GitHub CLI is authenticated and you want to publish the repo:
-
-```bash
-git init
-git add .
-git commit -m "Create AI agents duel interface"
-gh repo create ai-agents-duel --public --source . --remote origin --push
-```
+---
+*Handcrafted conceptually and engineered to the absolute maximum intelligence tier.*
