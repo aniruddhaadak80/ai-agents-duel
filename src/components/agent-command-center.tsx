@@ -103,7 +103,7 @@ export function AgentCommandCenter({ mode = "home" }: CommandCenterProps) {
     try {
       const response = await getJson<{ snapshot: DashboardSnapshot }>("/api/control-room/pulse", { method: "POST" });
       setSnapshot(response.snapshot);
-      setLiveLogTicker(prev => [...prev.slice(-4), "?????? CRITICAL INK SPILL ??????"]);
+      setLiveLogTicker(prev => [...prev.slice(-4), "⚠️ CRITICAL INK SPILL ⚠️"]);
       setFeedback("Ink spilled! Chaos anomalies deployed.");
     } catch (runError: unknown) {
       setError(runError instanceof Error ? runError.message : "Unable to pulse system.");
@@ -220,9 +220,9 @@ export function AgentCommandCenter({ mode = "home" }: CommandCenterProps) {
 
       {/* Hero Section */}
       <section className="hero-section">
-        <div className="floating-icon" style={{ top: "20%", left: "10%" }}>??</div>
-        <div className="floating-icon float-anim" style={{ top: "60%", right: "15%", animationDelay: "1s" }}>?</div>
-        <div className="floating-icon float-anim" style={{ top: "30%", right: "25%", animationDelay: "2s" }}>??</div>
+        <div className="floating-icon" style={{ top: "20%", left: "10%" }}>🎨</div>
+        <div className="floating-icon float-anim" style={{ top: "60%", right: "15%", animationDelay: "1s" }}>✨</div>
+        <div className="floating-icon float-anim" style={{ top: "30%", right: "25%", animationDelay: "2s" }}>✏️</div>
         
         <h1>
           Agent Sketchpad
@@ -257,12 +257,12 @@ export function AgentCommandCenter({ mode = "home" }: CommandCenterProps) {
             return (
               <div key={agent.id} className="feature-card sketch-card float-anim" style={{ transform: `rotate(${rot})` }}>
                 <div className="thumbtack"></div>
-                <div className="icon-circle">??</div>
+                  <div className="icon-circle">🤖</div>
                 <h3 style={{cursor:"pointer"}} onClick={() => setSelectedAgentId(agent.id)}>{agent.name}</h3>
                 <p><strong>{agent.specialization}</strong></p>
                 <p>{agent.description}</p>
                 <div className="agent-stats">
-                  <span style={{color: "var(--accent-red)"}}>? {agent.successRate}% SR</span>
+                  <span style={{color: "var(--accent-red)"}}>📈 {agent.successRate}% SR</span>
                   <span>{agent.queueDepth} Queued</span>
                 </div>
               </div>
@@ -287,7 +287,7 @@ export function AgentCommandCenter({ mode = "home" }: CommandCenterProps) {
                   <p><strong>Confidence:</strong> {run.confidence}%</p>
                 </div>
               </div>
-              <div className="polaroid-desc" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}><div><h4 style={{ fontSize: "2rem", color: "var(--accent-purple)" }}>Agent Output</h4><p style={{ whiteSpace: "pre-wrap", background: "#f0f0f0", padding: "1rem", borderRadius: "8px", border: "1px solid #ccc", fontFamily: "monospace", fontSize: "0.9rem", color: "#000" }}>{run.summary}</p></div><div><h4 style={{ fontSize: "2rem" }}>Event Log</h4><ul style={{ listStyleType: "none", padding: 0 }}>{run.events.map((ev, i) => <li key={i} style={{ marginBottom: "0.5rem" }}>? {ev}</li>)}</ul></div></div></div>
+              <div className="polaroid-desc" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}><div><h4 style={{ fontSize: "2rem", color: "var(--accent-purple)" }}>Agent Output</h4><p style={{ whiteSpace: "pre-wrap", background: "#f0f0f0", padding: "1rem", borderRadius: "8px", border: "1px solid #ccc", fontFamily: "monospace", fontSize: "0.9rem", color: "#000" }}>{run.summary}</p></div><div><h4 style={{ fontSize: "2rem" }}>Event Log</h4><ul style={{ listStyleType: "none", padding: 0 }}>{run.events.map((ev, i) => <li key={i} style={{ marginBottom: "0.5rem" }}>⚡ {ev}</li>)}</ul></div></div></div>
           ))}
         </div>
       </section>
@@ -417,7 +417,7 @@ export function AgentCommandCenter({ mode = "home" }: CommandCenterProps) {
            <textarea rows={4} value={objective} onChange={(e) => setObjective(e.target.value)}></textarea>
            
            <button className="sketch-btn primary" style={{ width: '100%', textAlign: 'center', boxSizing: 'border-box' }} onClick={() => void handleCreateRun()} disabled={isSubmitting}>
-             Submit Prompt ???
+             Submit Prompt 🚀
            </button>
            <p style={{ marginTop: '1rem', color: 'green', textAlign: 'center' }}>
              {feedback}
@@ -427,7 +427,7 @@ export function AgentCommandCenter({ mode = "home" }: CommandCenterProps) {
          {/* Duel Arena inside Desk area */}
          <div className="sticky-note-form" style={{ transform: "rotate(-1deg)", marginTop: "4rem", backgroundColor: "var(--accent-blue)", color: "#fff" }}>
            <div className="thumbtack" style={{ background: "var(--accent-yellow)" }}></div>
-           <h3 style={{ fontSize: '2.5rem', marginBottom: '1rem', color: "#fff" }}>Scribble Battle ??</h3>
+           <h3 style={{ fontSize: '2.5rem', marginBottom: '1rem', color: "#fff" }}>Scribble Battle ⚔️</h3>
            <p>Pit two agents against each other to steal creative juice.</p>
            <div className="duel-selects">
              <select value={combatantA ?? ""} onChange={(e) => setCombatantA(e.target.value)} style={{flex: 1, backgroundColor: "#fff"}}>
@@ -441,7 +441,7 @@ export function AgentCommandCenter({ mode = "home" }: CommandCenterProps) {
              </select>
            </div>
            <button className="sketch-btn danger" style={{ width: '100%', textAlign: 'center', marginTop: "1.5rem", boxSizing: "border-box" }} onClick={() => void handleAgentDuel()} disabled={isSubmitting}>
-             Start Brawl! ??
+             Start Brawl! 🔥
            </button>
          </div>
       </section>

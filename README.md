@@ -1,4 +1,4 @@
-# ??? AI Agents Duel: Digital Sketchbook Edition
+# 🤖⚔️ AI Agents Duel: Digital Sketchbook Edition
 
 ![Next.js](https://img.shields.io/badge/next.js-16+-black) ![TypeScript](https://img.shields.io/badge/typescript-5.x-blue) ![React](https://img.shields.io/badge/react-19-cyan) ![UI](https://img.shields.io/badge/ui-digital--sketchbook-orange)
 
@@ -12,13 +12,13 @@ Live Demo: [ai-agents-duel.vercel.app](https://ai-agents-duel.vercel.app)
 
 Instead of standard data tables and flat colors, this project treats your AI agents like characters in a chaotic, creative workspace:
 
-- **?? The Digital Sketchbook UI:** Features custom CSS-driven "wobbly" borders, pinned "tape" on polaroid containers, floating elements, and a handcrafted web-font stack (*Kalam* & *Patrick Hand*) that mimics physical paper and pen.
-- **?? Neural Live Wire:** A cyberpunk-inspired ticker anchored to the screen that constantly broadcasts the live, internal thoughts/actions of your agents.
-- **?? Agent Apex Arena (Scribble Battles):** An integrated mini-game where two agents duel in the backend. The winner gets a buffed Success Rate, while the loser suffers network degradation and queue-depth floods.
-- **?? System Meltdown (Ink Spill):** A "Pulse" button that injects pure chaos into the in-memory store. It fires off CSS keyframe hardware-shakes, sepia CRT filters, and randomly disrupts agent queues.
-- **?? Operator's Desk:** Create simulated tasks/prompts for your agents and watch them appear as freshly taped Polaroid shots in the project gallery.
+- **🎨 The Digital Sketchbook UI:** Features custom CSS-driven "wobbly" borders, pinned "tape" on polaroid containers, floating elements, and a handcrafted web-font stack (*Kalam* & *Patrick Hand*) that mimics physical paper and pen.
+- **🎨 Neural Live Wire:** A cyberpunk-inspired ticker anchored to the screen that constantly broadcasts the live, internal thoughts/actions of your agents.
+- **🎨 Agent Apex Arena (Scribble Battles):** An integrated mini-game where two agents duel in the backend. The winner gets a buffed Success Rate, while the loser suffers network degradation and queue-depth floods.
+- **🎨 System Meltdown (Ink Spill):** A "Pulse" button that injects pure chaos into the in-memory store. It fires off CSS keyframe hardware-shakes, sepia CRT filters, and randomly disrupts agent queues.
+- **🎨 Operator's Desk:** Create simulated tasks/prompts for your agents and watch them appear as freshly taped Polaroid shots in the project gallery.
 
-## ?? How to Run It Locally
+## 🚀 How to Run It Locally
 
 1. **Clone the repository:**
    \\\ash
@@ -35,7 +35,7 @@ Instead of standard data tables and flat colors, this project treats your AI age
    \\\
 4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## ?? How Can I Use This?
+## 💡 How Can I Use This?
 
 This project is built around an **In-Memory Store Pattern** (\src/lib/agent-duel/store.ts\). Right now, it perfectly simulates a backend without needing a database. Here is how you can use or extend it:
 
@@ -51,7 +51,7 @@ It is structured ready for real intelligence. To hook this up to OpenAI or Anthr
 ### 3. Steal the UI Architecture
 The \globals.css\ file contains an incredible amount of distinct styling: \order-radius\ tricks for a hand-drawn look, hard-shadow interactions, and complex CSS keyframe animations (like paper jitter and tape effects). You can comfortably extract this design system and drop it into your own Next.js or React projects.
 
-## ?? Tech Stack
+## ⚙️ Tech Stack
 
 - **Framework:** Next.js 16 (App Router)
 - **Language:** TypeScript
