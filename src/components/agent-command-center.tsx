@@ -294,6 +294,22 @@ export function AgentCommandCenter({ mode = "home" }: CommandCenterProps) {
          </div>
       </section>
 
+      <section style={{ maxWidth: "800px", margin: "4rem auto" }} className="sticky-note-form">
+        <h3 style={{ textDecoration: "underline", textDecorationStyle: "wavy", textDecorationColor: "var(--accent-teal)", fontSize: "2rem" }}>
+          Behind the Canvas 🎨
+        </h3>
+        <p style={{ marginTop: "1rem", fontSize: "1.2rem", lineHeight: "1.5" }}>
+          <strong>For Everyone (Even Non-Technical!):</strong> This is a magical "Digital Sketchbook" illusion! The robotic agents fighting and working above? They're simulated with complex math to look real. It's meant to spark your imagination—think about what a real team of intelligent AI agents could do together.
+        </p>
+        <p style={{ marginTop: "1rem", fontSize: "1.2rem", lineHeight: "1.5" }}>
+          <strong>For Builders & Developers:</strong> Want to build an actual AI command center?
+          <br/>
+          💡 <strong>Plug in Real AI:</strong> You can fork this repo and swap our simulated math inside <code>src/app/api/control-room</code> with actual OpenAI or Anthropic API keys.
+          <br/>
+          💡 <strong>Steal the UI:</strong> Love this wobbly, hand-drawn look? Go to the <a href="https://github.com/aniruddhaadak80/ai-agents-duel" target="_blank" rel="noreferrer" className="wavy-link" style={{color: "var(--accent-orange)"}}>GitHub repo</a>, grab <code>globals.css</code>, and steal the code for your own projects!
+        </p>
+      </section>
+
       <footer style={{ textAlign: "center", padding: "4rem", borderTop: "3px solid #1a1a1a", marginTop: "4rem", fontFamily: "var(--font-kalam)" }}>
         <p>Handcrafted by <a href="https://github.com/aniruddhaadak80/ai-agents-duel" className="wavy-link" style={{color: "var(--accent-orange)"}}>Aniruddha Adak</a></p>
         <p>&copy; {new Date().getFullYear()} Sketchbook System</p>
