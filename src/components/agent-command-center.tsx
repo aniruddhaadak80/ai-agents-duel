@@ -129,6 +129,29 @@ export function AgentCommandCenter({ mode = "home" }: CommandCenterProps) {
     }
   }
 
+  async function handleSimulateSwarm(workflowName: string, tasks: {agentId: string, objective: string}[]) {
+    setError(null);
+    setFeedback(`Dispatching ${workflowName} Swarm Tasks...`);
+    setIsSubmitting(true);
+    try {
+      for (const task of tasks) {
+        await fetch("/api/control-room/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(task),
+        });
+      }
+      const data = await getJson<DashboardSnapshot>("/api/control-room");
+      setSnapshot(data);
+      setLiveLogTicker(prev => [...prev.slice(-3), `🌐 OVERRIDE [${workflowName.toUpperCase()}] SWARM INITIATED 🌐`]);
+      setFeedback(`Swarm populated successfully. Check the gallery!`);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Swarm failed.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   async function handleCreateRun() {
     if (!selectedAgentId || !objective.trim()) return;
     setError(null);
@@ -151,6 +174,7 @@ export function AgentCommandCenter({ mode = "home" }: CommandCenterProps) {
 
   return (
     <main className={glitchMode ? "global-meltdown" : ""}>
+      <div className="holo-overlay"></div>
       <div className="neural-wire">
         <div className="neural-wire-content">
           {liveLogTicker.map((log, i) => (
@@ -241,11 +265,69 @@ export function AgentCommandCenter({ mode = "home" }: CommandCenterProps) {
               <div className="polaroid-desc">
                  <h4 style={{ fontSize: '2rem' }}>Event Log</h4>
                  <ul style={{ listStyleType: "none", padding: 0 }}>
-                   {run.events.map((ev, i) => <li key={i} style={{ marginBottom: "0.5rem" }}>?? {ev}</li>)}
+                   {run.events.map((ev, i) => <li key={i} style={{ marginBottom: "0.5rem" }}>⚡ {ev}</li>)}
                  </ul>
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Enterprise / Futuristic Swarm Use Cases */}
+      <section id="swarm" style={{ marginTop: "4rem", marginBottom: "4rem", position: "relative" }}>
+        <h2 style={{ fontSize: '3rem', textAlign: 'center', marginBottom: '1rem', fontFamily: 'var(--font-kalam)' }}>
+          🚀 Swarm Architectures
+        </h2>
+        <p style={{ textAlign: "center", marginBottom: "3rem", fontSize: "1.2rem", maxWidth: "700px", margin: "0 auto 3rem auto" }}>
+          One-click simulation of <strong>industry-grade multi-agent collaboration</strong>. 
+          See how distinct AI entities coordinate to tackle complex real-world pipelines.
+        </p>
+        
+        <div className="feature-grid swarm-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
+          
+          {/* Use Case 1: Cybersecurity */}
+          <div className="sketch-card float-anim" style={{ transform: "rotate(-1deg)", background: "var(--accent-teal)" }}>
+            <h3 style={{color: "#fff"}}>🛡️ Cyber Sec Audit</h3>
+            <p style={{color: "#ffe", marginBottom: "1rem"}}>Continuous threat modeling + code verification swarm.</p>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
+               <span style={{ fontSize: "0.8rem", background: "#fff", padding: "2px 6px", borderRadius: "10px" }}>Red Team AI</span>
+               <span style={{ fontSize: "0.8rem", background: "#fff", padding: "2px 6px", borderRadius: "10px" }}>Log Parser AI</span>
+            </div>
+            <button className="sketch-btn primary" onClick={() => handleSimulateSwarm("Cyber Sec", [
+              { agentId: "signal-curator", objective: "Analyze live server logs for zero-day behavioral anomalies." },
+              { agentId: "vector-ops", objective: "Harden firewall policies and route suspicious IPs to dead zones." }
+            ])}>Deploy Audit</button>
+          </div>
+
+          {/* Use Case 2: Marketing & Growth */}
+          <div className="sketch-card float-anim" style={{ transform: "rotate(1deg)", background: "var(--accent-yellow)" }}>
+            <h3>📈 Growth Engine</h3>
+            <p style={{ marginBottom: "1rem" }}>A/B test generation + realtime sentiment curation.</p>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
+               <span style={{ fontSize: "0.8rem", background: "#fff", padding: "2px 6px", borderRadius: "10px" }}>Copywriter AI</span>
+               <span style={{ fontSize: "0.8rem", background: "#fff", padding: "2px 6px", borderRadius: "10px" }}>Analytics AI</span>
+            </div>
+            <button className="sketch-btn primary" onClick={() => handleSimulateSwarm("Growth Matrix", [
+              { agentId: "atlas-story", objective: "Draft 3 aggressive ad hooks for a Gen-Z health drink." },
+              { agentId: "relay-console", objective: "Monitor A/B metric streams and escalate underperforming assets." }
+            ])}>Test Campaigns</button>
+          </div>
+
+          {/* Use Case 3: Autonomous Software Dev */}
+          <div className="sketch-card float-anim" style={{ transform: "rotate(-2deg)", background: "var(--accent-blue)", color: "#fff" }}>
+            <h3 style={{color: "#fff"}}>💻 Auto-DevOps</h3>
+            <p style={{color: "#ffe", marginBottom: "1rem" }}>Feature coding + automated deployment validation.</p>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
+               <span style={{ fontSize: "0.8rem", background: "#000", color: "#fff", padding: "2px 6px", borderRadius: "10px" }}>Code Weaver</span>
+               <span style={{ fontSize: "0.8rem", background: "#000", color: "#fff", padding: "2px 6px", borderRadius: "10px" }}>QA Reviewer</span>
+            </div>
+            <button className="sketch-btn primary" onClick={() => handleSimulateSwarm("AutoDevOps", [
+              { agentId: "vector-ops", objective: "Refactor legacy authentication routes into serverless Edge functions." },
+              { agentId: "atlas-story", objective: "Write comprehensive technical documentation for the new auth system." },
+              { agentId: "signal-curator", objective: "Audit developer pull request for backward-compatibility breaks." }
+            ])}>Ship Feature</button>
+          </div>
+
         </div>
       </section>
 
