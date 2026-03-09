@@ -1,27 +1,22 @@
-import type { Metadata } from "next";
-import { Cinzel, Inter, Space_Mono } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from 'next';
+import { Kalam, Patrick_Hand } from 'next/font/google';
+import './globals.css';
 
-const expressive = Cinzel({
-  subsets: ["latin"],
-  variable: "--font-expressive",
-  weight: ["400", "500", "700"],
+const kalam = Kalam({
+  subsets: ['latin'],
+  variable: '--font-kalam',
+  weight: ['400', '700'],
 });
 
-const ui = Inter({
-  subsets: ["latin"],
-  variable: "--font-ui",
-});
-
-const utilitarian = Space_Mono({
-  subsets: ["latin"],
-  variable: "--font-utilitarian",
-  weight: ["400", "700"],
+const patrickHand = Patrick_Hand({
+  subsets: ['latin'],
+  variable: '--font-patrick',
+  weight: ['400'],
 });
 
 export const metadata: Metadata = {
-  title: "AI Agents Duel",
-  description: "A split-screen interface for AI agents built around narrative friction.",
+  title: 'AI Agents Duel',
+  description: 'A digital sketchbook for AI agents built around narrative friction.',
 };
 
 export default function RootLayout({
@@ -30,8 +25,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${expressive.variable} ${utilitarian.variable} ${ui.variable}`}>
+    <html lang="en" className="\${kalam.variable} \\">
+      <body>
         {children}
       </body>
     </html>
