@@ -61,6 +61,8 @@ export type SystemMetrics = {
   runningNow: number;
   completedToday: number;
   averageConfidence: number;
+  reviewQueue: number;
+  pausedAgents: number;
 };
 
 export type Playbook = {
@@ -92,4 +94,6 @@ export type UpdateControlInput =
   | { type: "set-auto-retry"; value: boolean }
   | { type: "set-review-required"; value: boolean }
   | { type: "toggle-agent"; agentId: string }
-  | { type: "retry-run"; runId: string };
+  | { type: "retry-run"; runId: string }
+  | { type: "resolve-run"; runId: string }
+  | { type: "pulse-system" };

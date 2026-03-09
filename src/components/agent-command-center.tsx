@@ -83,10 +83,40 @@ export function AgentCommandCenter({ mode = "home" }: CommandCenterProps) {
   const [objective, setObjective] = useState(
     "Prepare a high-confidence launch brief and route the publish-ready output to the operator queue.",
   );
+  
+  // High-Energy Feature State
+  const [combatantA, setCombatantA] = useState<string | null>(null);
+  const [combatantB, setCombatantB] = useState<string | null>(null);
+  const [liveLogTicker, setLiveLogTicker] = useState<string[]>([
+    "SYS_INIT: Boot sequence authenticated.",
+    "NETWORK: Operators standing by.",
+  ]);
+  const [glitchMode, setGlitchMode] = useState(false);
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+
+  // Background Neural Stream
+  useEffect(() => {
+    if (!snapshot) return;
+    const interval = setInterval(() => {
+      const activeAgents = snapshot.agents.filter(a => a.status !== "paused");
+      if (activeAgents.length > 0) {
+        const randomAgent = activeAgents[Math.floor(Math.random() * activeAgents.length)];
+        const events = [
+          `[${randomAgent.name}] realigning neural weights.`,
+          `[${randomAgent.name}] memory fragment recovered.`,
+          `[${randomAgent.name}] intercepting external packet.`,
+          `[${randomAgent.name}] analyzing risk vector.`,
+        ];
+        const evt = events[Math.floor(Math.random() * events.length)];
+        setLiveLogTicker(prev => [...prev.slice(-4), evt]);
+      }
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [snapshot]);
 
   useEffect(() => {
     let active = true;
@@ -172,6 +202,54 @@ export function AgentCommandCenter({ mode = "home" }: CommandCenterProps) {
     }
   }
 
+  async function handlePulseSystem() {
+    setError(null);
+    setFeedback(null);
+    setIsSubmitting(true);
+    setGlitchMode(true);
+    
+    // Auto turn off UI glitch mode after 3s to let the eye rest
+    setTimeout(() => setGlitchMode(false), 3000);
+
+    try {
+      const response = await getJson<{ snapshot: DashboardSnapshot }>("/api/control-room/pulse", {
+        method: "POST",
+      });
+
+      setSnapshot(response.snapshot);
+      setLiveLogTicker(prev => [...prev.slice(-4), "🔥🔥🔥 CRITICAL SYSTEM PULSE INITIATED 🔥🔥🔥"]);
+      setFeedback("System pulsed! Chaos anomalies deployed.");
+    } catch (runError: unknown) {
+      setError(runError instanceof Error ? runError.message : "Unable to pulse system.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleAgentDuel() {
+    if (!combatantA || !combatantB) {
+      setError("Select two agents to duel.");
+      return;
+    }
+    setError(null);
+    setFeedback(null);
+    setIsSubmitting(true);
+
+    try {
+      const response = await getJson<{ snapshot: DashboardSnapshot; duelLog: string }>("/api/control-room/duel", {
+        method: "POST",
+        body: JSON.stringify({ agent1Id: combatantA, agent2Id: combatantB })
+      });
+      setSnapshot(response.snapshot);
+      setLiveLogTicker(prev => [...prev.slice(-4), response.duelLog]);
+      setFeedback("Duel resolved.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Duel failed.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   const selectedAgent = snapshot?.agents.find((agent) => agent.id === selectedAgentId) ?? snapshot?.agents[0] ?? null;
   const selectedRun = snapshot?.runs.find((run) => run.id === selectedRunId) ?? snapshot?.runs[0] ?? null;
   const leftAgents = snapshot?.agents.filter((agent) => agent.side === "left") ?? [];
@@ -180,7 +258,16 @@ export function AgentCommandCenter({ mode = "home" }: CommandCenterProps) {
   const rightPlaybooks = snapshot?.playbooks.filter((playbook) => playbook.side === "right") ?? [];
 
   return (
-    <main className="duel-shell">
+    <main className={`duel-shell ${glitchMode ? "global-meltdown" : ""}`}>
+      {/* Live Cyber Ticker */}
+      <div className="neural-wire">
+        <div className="neural-wire-content">
+          {liveLogTicker.map((log, i) => (
+            <span key={i} className="wire-item">{log}</span>
+          ))}
+        </div>
+      </div>
+
       <div className="tension-line" aria-hidden="true">
         <div className="tension-line__pulse" />
       </div>
@@ -189,6 +276,11 @@ export function AgentCommandCenter({ mode = "home" }: CommandCenterProps) {
         <Link href="/">AI Agents</Link>
         <a href="#runs">Live Runs</a>
         <Link href="/control-room">Control Room</Link>
+        <a href="https://github.com/AniruddhaAdak" target="_blank" rel="noopener noreferrer" className="github-link" title="Source">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+          </svg>
+        </a>
       </header>
 
       <section className="hero split-section">
@@ -541,9 +633,50 @@ export function AgentCommandCenter({ mode = "home" }: CommandCenterProps) {
         </div>
       </section>
 
-      <section className="choice-moment">
+      <section className="choice-moment chaos-ribbon">
         <div className="choice-noise" aria-hidden="true" />
-        <blockquote>The interface now carries live state, not just a visual argument.</blockquote>
+        <blockquote>The interface now carries live state, not just a visual argument. Welcome to the chaos arena.</blockquote>
+        <button type="button" className="chaos-pulse-btn anomaly-deck" onClick={() => void handlePulseSystem()} disabled={isSubmitting}>
+             INITIATE SYSTEM PULSE 🔥
+        </button>
+      </section>
+
+      {/* NEW: Agent Sabotage / Duel Arena */}
+      <section className="operator split-section duel-arena">
+        <Reveal side="left" className="side side-a operator-panel">
+          <p className="section-label" style={{ color: "var(--warn)" }}>AGENT APEX ARENA</p>
+          <p className="hero-copy">Pit two agents against each other in the neural network. The winner receives a combat buff. The loser gets degraded and their queue floods.</p>
+          <div className="duel-controls">
+            <select className="duel-select" value={combatantA ?? ""} onChange={(e) => setCombatantA(e.target.value)}>
+              <option value="" disabled>Select Combatant Alpha...</option>
+              {snapshot?.agents.map(a => <option key={a.id} value={a.id}>{a.name} ({a.successRate}% SR)</option>)}
+            </select>
+            <span className="duel-vs">VS</span>
+            <select className="duel-select" value={combatantB ?? ""} onChange={(e) => setCombatantB(e.target.value)}>
+              <option value="" disabled>Select Combatant Beta...</option>
+              {snapshot?.agents.map(a => <option key={a.id} value={a.id}>{a.name} ({a.successRate}% SR)</option>)}
+            </select>
+          </div>
+          <button 
+            type="button" 
+            className="chaos-pulse-btn combat-btn" 
+            onClick={() => void handleAgentDuel()} 
+            disabled={isSubmitting || !combatantA || !combatantB || combatantA === combatantB}
+          >
+            EXECUTE NEURAL DUEL ⚔️
+          </button>
+        </Reveal>
+        <Reveal side="right" className="side side-b operator-panel duel-log-panel">
+          <p className="section-label">DUEL TELEMETRY</p>
+          <div className="duel-log-output">
+             {liveLogTicker.slice(-5).map((log, i) => (
+                <div key={i} className="duel-log-row">
+                  <span className="log-timestamp">{new Date().toISOString().split('T')[1].slice(0, -1)}</span>
+                  <span className="log-msg" style={{ color: log.includes("CRITICAL") ? "var(--accent)" : "inherit" }}>{log}</span>
+                </div>
+             ))}
+          </div>
+        </Reveal>
       </section>
 
       <section className="cta split-section final-cta">
@@ -560,6 +693,11 @@ export function AgentCommandCenter({ mode = "home" }: CommandCenterProps) {
           </Link>
         </Reveal>
       </section>
+
+      <footer className="footer-built">
+        <p>Built by Aniruddha Adak</p>
+        <p>&copy; {new Date().getFullYear()} Agent-Duel System</p>
+      </footer>
     </main>
   );
 }

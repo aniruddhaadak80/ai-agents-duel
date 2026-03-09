@@ -917,3 +917,222 @@ a {
     opacity: 0.4;
   }
 }
+
+/* Custom Chaos UI & Footer Extensions */
+.github-link {
+  display: flex;
+  align-items: center;
+  color: var(--obsidian);
+  transition: color 0.2s, transform 0.2s;
+  padding: 4px;
+}
+.github-link:hover {
+  color: var(--accent);
+  transform: scale(1.1) rotate(5deg);
+}
+@media (prefers-color-scheme: dark) {
+  .github-link {
+    color: var(--paper);
+  }
+}
+
+.chaos-ribbon {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--obsidian) 0px,
+    var(--obsidian) 10px,
+    var(--accent) 10px,
+    var(--accent) 20px
+  );
+  color: var(--paper);
+  padding: 4rem;
+  text-align: center;
+  border-top: 4px solid var(--accent);
+  border-bottom: 4px solid var(--accent);
+  position: relative;
+  overflow: hidden;
+}
+.chaos-ribbon blockquote {
+  background: var(--obsidian);
+  padding: 1rem 2rem;
+  display: inline-block;
+  margin-bottom: 2rem;
+  border-radius: 4px;
+  border: 1px solid var(--accent);
+  font-style: italic;
+  font-family: monospace;
+}
+.chaos-pulse-btn {
+  background: var(--stone);
+  color: var(--accent);
+  border: 2px solid var(--accent);
+  padding: 1rem 2rem;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 1.2rem;
+  cursor: pointer;
+  border-radius: 0;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: all 0.1s;
+  animation: jitter 3s infinite;
+}
+.chaos-pulse-btn:hover {
+  background: var(--accent);
+  color: var(--obsidian);
+  transform: scale(1.05) translate(2px, -2px);
+  box-shadow: -4px 4px 0 var(--obsidian);
+}
+.chaos-pulse-btn:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  animation: none;
+}
+
+@keyframes jitter {
+  0% { transform: translate(0, 0); }
+  5% { transform: translate(1px, -1px); }
+  10% { transform: translate(-1px, 1px); }
+  15% { transform: translate(2px, 0px); }
+  20% { transform: translate(0, 0); }
+  100% { transform: translate(0, 0); }
+}
+
+.footer-built {
+  display: flex;
+  justify-content: space-between;
+  padding: 2rem 4vw;
+  background: var(--obsidian);
+  color: var(--stone);
+  font-size: 0.85rem;
+  font-family: monospace;
+  text-transform: uppercase;
+  border-top: 1px solid var(--overlay);
+}
+.footer-built p {
+  margin: 0;
+}
+.footer-built p:first-child {
+  color: var(--paper);
+}
+@media (max-width: 600px) {
+  .footer-built {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+}
+
+/* Maximum Intelligence: Meltdown & Duel Subsystems */
+.global-meltdown {
+  animation: system-meltdown 0.2s 15;
+  filter: sepia(100%) hue-rotate(-50deg) saturate(300%) contrast(200%);
+  position: relative;
+}
+.global-meltdown::after {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 0, 0, 0.1) 2px, rgba(255, 0, 0, 0.1) 4px);
+  z-index: 9999;
+}
+
+@keyframes system-meltdown {
+  0% { transform: translate(0); }
+  20% { transform: translate(-3px, 2px) skewX(2deg); }
+  40% { transform: translate(3px, -2px) skewY(-2deg); }
+  60% { transform: translate(-2px, 3px); }
+  80% { transform: translate(2px, -3px); }
+  100% { transform: translate(0); }
+}
+
+.neural-wire {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: var(--obsidian);
+  color: var(--accent);
+  font-family: monospace;
+  font-size: 0.75rem;
+  padding: 4px;
+  z-index: 100;
+  white-space: nowrap;
+  overflow: hidden;
+  border-bottom: 1px solid var(--accent);
+}
+.neural-wire-content {
+  display: inline-block;
+  animation: scroll-wire 20s linear infinite;
+}
+.wire-item {
+  margin-right: 2rem;
+}
+.wire-item::before {
+  content: '>';
+  margin-right: 0.5rem;
+  color: var(--stone);
+}
+@keyframes scroll-wire {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.duel-arena {
+  background-color: var(--run-bg);
+  border-top: 1px dashed var(--overlay);
+  border-bottom: 1px dashed var(--overlay);
+}
+.duel-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 2rem 0;
+  flex-wrap: wrap;
+}
+.duel-select {
+  flex: 1;
+  min-width: 200px;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--overlay);
+  padding: 0.75rem;
+  font-family: monospace;
+}
+.duel-vs {
+  font-family: var(--font-primary);
+  font-weight: 800;
+  color: var(--warn);
+  font-size: 1.5rem;
+}
+.combat-btn {
+  width: 100%;
+  background: var(--warn) !important;
+  color: #000 !important;
+  border-color: var(--warn) !important;
+}
+.combat-btn:hover {
+  box-shadow: -4px 4px 0 rgba(255,0,0,0.5) !important;
+}
+.duel-log-panel {
+  background: #000;
+  border-left: 1px solid #333;
+}
+.duel-log-output {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-family: monospace;
+  font-size: 0.85rem;
+  margin-top: 1.5rem;
+}
+.duel-log-row {
+  display: flex;
+  gap: 1rem;
+  border-bottom: 1px solid #222;
+  padding-bottom: 5px;
+}
+.log-timestamp {
+  color: #666;
+}

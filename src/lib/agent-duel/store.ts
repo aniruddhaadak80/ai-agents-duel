@@ -199,6 +199,8 @@ function buildMetrics() {
     runningNow: state.runs.filter((run) => run.status === "running" || run.status === "queued").length,
     completedToday: state.runs.filter((run) => run.status === "completed").length,
     averageConfidence: computeAverageConfidence(),
+    reviewQueue: state.runs.filter((run) => run.status === "needs-review").length,
+    pausedAgents: state.agents.filter((agent) => agent.status === "paused").length,
   };
 }
 
@@ -256,10 +258,19 @@ export function createRun(input: CreateRunInput) {
     throw new Error("Selected agent was not found.");
   }
 
+  if (agent.status === "paused") {
+    throw new Error("Paused agents cannot accept new runs.");
+  }
+
   state.runCounter += 1;
   const runId = `run-${state.runCounter}`;
   const confidence = Math.max(72, Math.min(98, agent.successRate - agent.queueDepth));
-  const status = confidence < 80 && state.controls.reviewRequired ? "needs-review" : "completed";
+  const status =
+    confidence < 80 && state.controls.reviewRequired
+      ? "needs-review"
+      : agent.side === "right" && state.controls.autonomyMode !== "guardrailed"
+        ? "running"
+        : "completed";
   const now = new Date();
   const finishedAt = new Date(now.getTime() + 90_000).toISOString();
 
@@ -272,7 +283,7 @@ export function createRun(input: CreateRunInput) {
     confidence,
     durationMs: agent.latencyMs * 34,
     startedAt: now.toISOString(),
-    finishedAt,
+    finishedAt: status === "running" ? undefined : finishedAt,
     summary: composeSummary(agent.name, input.objective, state.controls.autonomyMode, state.controls.publishTarget),
     output: composeOutput(agent, state.controls.escalationPolicy),
     events: [
@@ -289,6 +300,67 @@ export function createRun(input: CreateRunInput) {
   agent.lastRunSummary = run.summary;
 
   return run;
+}
+
+function resolveRun(runId: string) {
+  const run = state.runs.find((item) => item.id === runId);
+
+  if (!run) {
+    throw new Error("Run not found.");
+  }
+
+  run.status = "completed";
+  run.confidence = Math.min(99, run.confidence + 8);
+  run.finishedAt = new Date().toISOString();
+  run.output = `${run.output} Review completed by operator.`;
+  run.events.unshift("review resolved");
+  run.steps = run.steps.map((step) => ({ ...step, state: "done" }));
+
+  const agent = getAgentById(run.agentId);
+
+  if (agent) {
+    agent.status = "ready";
+    agent.queueDepth = Math.max(0, agent.queueDepth - 1);
+    agent.lastRunSummary = `Resolved review: ${run.title}.`;
+  }
+}
+
+export function pulseSystem() {
+  state.agents = state.agents.map((agent, index) => {
+    const nextQueueDepth = Math.max(0, agent.queueDepth + (index % 2 === 0 ? 1 : -1));
+    const nextStatus = nextQueueDepth > 4 ? "degraded" : agent.status === "paused" ? "paused" : nextQueueDepth > 2 ? "running" : "ready";
+
+    return {
+      ...agent,
+      queueDepth: nextQueueDepth,
+      status: nextStatus,
+      lastRunSummary: `${agent.lastRunSummary} Pulse updated queue to ${nextQueueDepth}.`,
+    };
+  });
+
+  state.runs = state.runs.map((run, index) => {
+    if (index >= 4) {
+      return run;
+    }
+
+    if (run.status === "running") {
+      return {
+        ...run,
+        durationMs: run.durationMs + 30_000,
+        events: ["system pulse", ...run.events].slice(0, 5),
+        summary: `${run.summary} System pulse re-evaluated urgency.`,
+      };
+    }
+
+    if (run.status === "needs-review") {
+      return {
+        ...run,
+        events: ["operator reminder", ...run.events].slice(0, 5),
+      };
+    }
+
+    return run;
+  });
 }
 
 export function updateControls(input: UpdateControlInput) {
@@ -328,9 +400,45 @@ export function updateControls(input: UpdateControlInput) {
       createRun({ agentId: existingRun.agentId, objective: existingRun.objective });
       break;
     }
+    case "resolve-run":
+      resolveRun(input.runId);
+      break;
+    case "pulse-system":
+      pulseSystem();
+      break;
     default:
       throw new Error("Unsupported control update.");
   }
 
   return getDashboardSnapshot();
+}
+export function triggerDuel(agent1Id: string, agent2Id: string) {
+  const a1 = state.agents.find((a) => a.id === agent1Id);
+  const a2 = state.agents.find((a) => a.id === agent2Id);
+  
+  if (!a1 || !a2 || a1.id === a2.id) {
+    throw new Error("Invalid combatants for duel.");
+  }
+
+  // Calculate combat score based on success rate and a random intensity factor
+  const a1Score = Math.random() * a1.successRate;
+  const a2Score = Math.random() * a2.successRate;
+
+  const winner = a1Score >= a2Score ? a1 : a2;
+  const loser = a1Score >= a2Score ? a2 : a1;
+
+  // Mutate loser intensely
+  loser.status = "degraded";
+  loser.queueDepth += Math.floor(Math.random() * 20) + 5;
+  loser.successRate = Math.max(10, loser.successRate - 15);
+
+  // Buff winner
+  winner.status = "running";
+  winner.successRate = Math.min(100, winner.successRate + 5);
+  winner.queueDepth = Math.max(0, winner.queueDepth - 2);
+
+  return {
+    snapshot: getDashboardSnapshot(), 
+    duelLog: `CRITICAL OVERRIDE: [${winner.name}] annihilated [${loser.name}]. ${loser.name} network degraded and queued flooded.`
+  };
 }
