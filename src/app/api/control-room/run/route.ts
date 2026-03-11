@@ -3,50 +3,57 @@ import { createRun, getDashboardSnapshot, updateRunRealAI } from "@/lib/agent-du
 import { CreateRunInput } from "@/lib/agent-duel/types";
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({});
+const geminiApiKey = process.env.GEMINI_API_KEY;
+const ai = geminiApiKey ? new GoogleGenAI({ apiKey: geminiApiKey }) : null;
 
 export async function POST(request: NextRequest) {
   try {
     const payload = (await request.json()) as Partial<CreateRunInput>;
 
-    if (!payload.agentId || !payload.objective?.trim()) {
-      return NextResponse.json({ error: "agentId and objective are required." }, { status: 400 });
+    if (!payload.workflowId || !payload.objective?.trim()) {
+      return NextResponse.json({ error: "workflowId and objective are required." }, { status: 400 });
     }
 
-    // 1. Create the run in memory (starts it in simulated 'running' or 'completed' depending on mock logic)
     const run = createRun({
+      workflowId: payload.workflowId,
       agentId: payload.agentId,
       objective: payload.objective.trim(),
+      context: payload.context?.trim(),
     });
 
-    // 2. Map Agent ID to a Persona Prompt
-    let persona = "You are a generic helpful AI assistant.";
-    if (payload.agentId === "atlas-story") persona = "You are Atlas Story. You turn raw constraints into clean, high-stakes narratives and ad copy. Be concise, punchy, and compelling.";
-    if (payload.agentId === "signal-curator") persona = "You are Signal Curator. You read trends, audit systems, and hunt for hidden anomalies or security flaws. Be blunt and analytical.";
-    if (payload.agentId === "vector-ops") persona = "You are Vector Ops. You execute algorithmic tasks, harden systems, or simulate code refactoring. Be highly technical and precise.";
-    if (payload.agentId === "relay-console") persona = "You are Relay Console. You supervise streams, monitor A/B tests, or summarize low-confidence logs. Use bullet points and operational tone.";
+    if (!ai) {
+      return NextResponse.json({ run, snapshot: getDashboardSnapshot(), enrichedByModel: false });
+    }
 
-    const prompt = `${persona}\n\nObjective: ${payload.objective.trim()}\n\nTask: Execute the objective and respond with a short paragraph or bulleted list summarizing your findings or actions.`;
+    let persona = "You are a pragmatic multi-agent systems assistant.";
+    if (run.agentId === "atlas-story") persona = "You are Atlas Story. You turn raw constraints into clean briefs, launch narratives, and stakeholder-ready recommendations.";
+    if (run.agentId === "signal-curator") persona = "You are Signal Curator. You gather evidence, map contradictions, and highlight risks before recommendations are made.";
+    if (run.agentId === "vector-ops") persona = "You are Vector Ops. You turn requirements into execution plans, implementation checklists, and launch-ready delivery packages.";
+    if (run.agentId === "relay-console") persona = "You are Relay Console. You review output quality, summarize risk, and produce concise approval notes for operators.";
+
+    const prompt = [
+      persona,
+      `Workflow: ${run.title}`,
+      `Objective: ${run.objective}`,
+      `Context: ${run.context || "No additional context provided."}`,
+      `Current deliverable: ${run.deliverable}`,
+      "Respond with a compact operator brief in plain text. Include: summary, key risks, and next steps.",
+    ].join("\n\n");
 
     try {
-      // 3. Call actual Gemini API
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-2.5-flash",
         contents: prompt,
       });
-      
-      const realText = response.text || "Execution complete. No output generated.";
-      
-      // 4. Update the in-memory store with the real AI output
-      updateRunRealAI(run.id, realText);
 
+      const realText = response.text || "Execution complete. No output generated.";
+      updateRunRealAI(run.id, realText);
     } catch (llmError) {
       console.error("Gemini Error:", llmError);
       updateRunRealAI(run.id, "Real AI Execution Failed. " + String(llmError));
     }
 
-    // Return the mutated state
-    return NextResponse.json({ run, snapshot: getDashboardSnapshot() });
+    return NextResponse.json({ run, snapshot: getDashboardSnapshot(), enrichedByModel: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to create run.";
     return NextResponse.json({ error: message }, { status: 400 });

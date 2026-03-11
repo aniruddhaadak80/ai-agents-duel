@@ -1,64 +1,152 @@
-# 🤖⚔️ AI Agents Duel: Digital Sketchbook Edition
+# Multi-Agent Studio
 
-![Next.js](https://img.shields.io/badge/next.js-16+-black) ![TypeScript](https://img.shields.io/badge/typescript-5.x-blue) ![React](https://img.shields.io/badge/react-19-cyan) ![UI](https://img.shields.io/badge/ui-digital--sketchbook-orange)
+A fully functional Next.js multi-agent system that turns one broad user request into a visible planner, researcher, builder, and reviewer workflow.
 
-An interactive, narrative-driven AI Agent command center that completely abandons sterile corporate UI in favor of a **Digital Sketchbook** aesthetic. 
+This project was rebuilt around the core ideas from the DEV Education track on building multi-agent systems: specialization, orchestration, explicit handoffs, and review gates. Instead of one giant prompt, the app gives users a workflow library, agent controls, a review queue, and inspectable run details.
 
-Live Demo: [ai-agents-duel.vercel.app](https://ai-agents-duel.vercel.app)
+## What the app does
 
----
+Multi-Agent Studio is aimed at users who need practical help turning fuzzy work into structured output.
 
-## ? Standout Features
+It ships with four workflow templates:
 
-Instead of standard data tables and flat colors, this project treats your AI agents like characters in a chaotic, creative workspace:
+- Launch Campaign Studio
+- Ops War Room
+- Founder Decision Desk
+- Ship Feature Relay
 
-- **🎨 The Digital Sketchbook UI:** Features custom CSS-driven "wobbly" borders, pinned "tape" on polaroid containers, floating elements, and a handcrafted web-font stack (*Kalam* & *Patrick Hand*) that mimics physical paper and pen.
-- **🎨 Neural Live Wire:** A cyberpunk-inspired ticker anchored to the screen that constantly broadcasts the live, internal thoughts/actions of your agents.
-- **🎨 Agent Apex Arena (Scribble Battles):** An integrated mini-game where two agents duel in the backend. The winner gets a buffed Success Rate, while the loser suffers network degradation and queue-depth floods.
-- **🎨 System Meltdown (Ink Spill):** A "Pulse" button that injects pure chaos into the in-memory store. It fires off CSS keyframe hardware-shakes, sepia CRT filters, and randomly disrupts agent queues.
-- **🎨 Operator's Desk:** Create simulated tasks/prompts for your agents and watch them appear as freshly taped Polaroid shots in the project gallery.
+Each run produces:
 
-## 🚀 How to Run It Locally
+- A workflow title and objective
+- Stage-by-stage ownership
+- Agent contributions
+- Deliverable artifacts
+- Recommendations and operator brief
+- Review or completion state
 
-1. **Clone the repository:**
-   \\\ash
-   git clone https://github.com/aniruddhaadak80/ai-agents-duel.git
-   cd ai-agents-duel
-   \\\
-2. **Install dependencies:**
-   \\\ash
-   npm install
-   \\\
-3. **Start the development server:**
-   \\\ash
-   npm run dev
-   \\\
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+The app runs locally with an in-memory orchestration engine and optionally upgrades itself with Gemini output when `GEMINI_API_KEY` is configured.
 
-## 💡 How Can I Use This?
+## Core features
 
-This project is built around an **In-Memory Store Pattern** (\src/lib/agent-duel/store.ts\). Right now, it perfectly simulates a backend without needing a database. Here is how you can use or extend it:
+- Workflow-first orchestration instead of a single prompt box
+- Multiple specialized agents with visible roles and status
+- Review queue with resolve and retry actions
+- Operator controls for autonomy mode, publish target, and escalation policy
+- Sandbox tools for queue pulse and agent duel stress testing
+- Responsive sketchbook-style UI that works on desktop and mobile
+- Zero-database setup for fast local runs and Vercel deployment
 
-### 1. The Presentation Mockup
-Need to pitch a multi-agent system to investors or stakeholders? Use this exact dashboard out-of-the-box. The animations, interactive dueling, and dynamic UI elements make it an incredible showcase tool to explain how "Supervisor vs. Worker" agents operate.
+## Tech stack
 
-### 2. Plug in Real LLMs
-It is structured ready for real intelligence. To hook this up to OpenAI or Anthropic:
-- Navigate to \src/app/api/control-room/run/route.ts\.
-- Instead of relying on the mock \createRun\ function, inject your LLM call there.
-- Pass the user's \objective\ to your LLM framework (like LangChain, AutoGen, or raw OpenAI API) and return the response back to the UI to be glued onto the Sketchpad.
+- Next.js 16
+- React 19
+- TypeScript
+- Pure CSS
+- Optional Gemini enrichment via `@google/genai`
+- Vercel deployment target
 
-### 3. Steal the UI Architecture
-The \globals.css\ file contains an incredible amount of distinct styling: \order-radius\ tricks for a hand-drawn look, hard-shadow interactions, and complex CSS keyframe animations (like paper jitter and tape effects). You can comfortably extract this design system and drop it into your own Next.js or React projects.
+## Local development
 
-## ⚙️ Tech Stack
+1. Install dependencies.
 
-- **Framework:** Next.js 16 (App Router)
-- **Language:** TypeScript
-- **Styling:** Pure CSS (CSS Variables, keyframes)
-- **Fonts:** \
-ext/font/google\ (Kalam, Patrick Hand)
-- **Deployment:** Vercel
+```bash
+npm install
+```
 
----
-*Handcrafted conceptually and engineered to the absolute maximum intelligence tier.*
+2. Create a local env file if you want Gemini-powered enrichment.
+
+```bash
+copy .env.example .env.local
+```
+
+3. Start the dev server.
+
+```bash
+npm run dev
+```
+
+4. Open `http://localhost:3000`.
+
+## Environment variables
+
+| Name | Required | Purpose |
+| --- | --- | --- |
+| `GEMINI_API_KEY` | No | Enables Gemini enrichment for generated run output |
+
+If the key is missing, the app still works using the local multi-agent orchestration engine.
+
+## How the orchestration works
+
+The app uses four fixed roles:
+
+- `Atlas Story` plans the mission and frames the deliverable.
+- `Signal Curator` gathers evidence, tensions, and contradictions.
+- `Vector Ops` turns the plan into an execution package.
+- `Relay Console` reviews confidence, risk, and operator readiness.
+
+A run follows this shape:
+
+1. The user selects a workflow template.
+2. A lead agent starts the workflow.
+3. The store expands the objective into stages, contributions, artifacts, and recommendations.
+4. Operator controls influence confidence, review gating, and publish behavior.
+5. The result is shown in the mission board and review queue.
+6. If Gemini is configured, the selected agent can enrich the final output.
+
+## Project structure
+
+- `src/components/agent-command-center.tsx`: the main interactive UI
+- `src/lib/agent-duel/store.ts`: in-memory orchestration engine
+- `src/lib/agent-duel/types.ts`: workflow, run, and control types
+- `src/app/api/control-room`: route handlers for snapshot, run creation, controls, pulse, and duel
+
+## Deploy to Vercel
+
+1. Push this project to a GitHub repository.
+2. Import the repository into Vercel.
+3. Add `GEMINI_API_KEY` in the Vercel project settings if you want model enrichment.
+4. Deploy.
+
+Vercel does not need a database or extra build services for this version of the app.
+
+## Push to GitHub
+
+If this repository is already connected to Git, the standard sequence is:
+
+```bash
+git add .
+git commit -m "Build workflow-driven multi-agent studio"
+git push origin main
+```
+
+If you want to publish under a new repository:
+
+```bash
+git init
+git add .
+git commit -m "Initial commit"
+git branch -M main
+git remote add origin <your-repo-url>
+git push -u origin main
+```
+
+## DEV post draft
+
+A submission-ready draft is included at `docs/devto-submission.md`.
+
+## Why this version is more useful
+
+The previous build leaned heavily on presentation. This version is oriented around real operator behavior:
+
+- faster onboarding through template workflows
+- clear roles instead of vague agent theatrics
+- visible review and retry mechanics
+- inspectable deliverables for non-technical users
+- optional model integration without making local setup fragile
+
+## Next improvements
+
+- Persist runs to a real database
+- Stream live agent events over SSE or websockets
+- Add user authentication and saved workspaces
+- Connect real tool adapters for Slack, Notion, and Linear

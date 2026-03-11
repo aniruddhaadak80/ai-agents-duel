@@ -6,21 +6,27 @@ export type RunStatus = "queued" | "running" | "completed" | "needs-review" | "f
 
 export type AutonomyMode = "guardrailed" | "supervised" | "aggressive";
 
-export type PublishTarget = "notion" | "slack" | "linear";
+export type PublishTarget = "notion" | "slack" | "linear" | "email";
 
 export type EscalationPolicy = "human-first" | "confidence-threshold" | "sla-first";
+
+export type AgentRole = "planner" | "researcher" | "builder" | "reviewer";
+
+export type WorkflowAudience = "founders" | "marketers" | "operators" | "developers" | "general";
 
 export type AgentProfile = {
   id: string;
   slug: string;
   name: string;
   side: DuelSide;
+  role: AgentRole;
   philosophy: string;
   specialization: string;
   status: AgentStatus;
   description: string;
   tools: string[];
   safeguards: string[];
+  idealFor: string[];
   latencyMs: number;
   successRate: number;
   queueDepth: number;
@@ -30,13 +36,39 @@ export type AgentProfile = {
 export type RunStep = {
   label: string;
   state: "done" | "active" | "waiting";
+  ownerAgentId: string;
+};
+
+export type AgentContribution = {
+  agentId: string;
+  title: string;
+  content: string;
+};
+
+export type RunArtifact = {
+  label: string;
+  value: string;
+};
+
+export type WorkflowTemplate = {
+  id: string;
+  title: string;
+  audience: WorkflowAudience;
+  description: string;
+  defaultObjective: string;
+  deliverable: string;
+  tags: string[];
+  stages: string[];
+  recommendedAgentIds: string[];
 };
 
 export type AgentRun = {
   id: string;
+  workflowId: string;
   agentId: string;
   title: string;
   objective: string;
+  context: string;
   status: RunStatus;
   confidence: number;
   durationMs: number;
@@ -44,8 +76,14 @@ export type AgentRun = {
   finishedAt?: string;
   summary: string;
   output: string;
+  deliverable: string;
   events: string[];
   steps: RunStep[];
+  agentPath: string[];
+  contributions: AgentContribution[];
+  artifacts: RunArtifact[];
+  recommendations: string[];
+  operatorBrief: string;
 };
 
 export type OperatorControls = {
@@ -80,11 +118,14 @@ export type DashboardSnapshot = {
   agents: AgentProfile[];
   runs: AgentRun[];
   playbooks: Playbook[];
+  workflows: WorkflowTemplate[];
 };
 
 export type CreateRunInput = {
-  agentId: string;
+  agentId?: string;
+  workflowId: string;
   objective: string;
+  context?: string;
 };
 
 export type UpdateControlInput =

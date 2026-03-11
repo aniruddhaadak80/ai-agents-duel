@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint ."
   },
   "dependencies": {
     "@google/genai": "^1.44.0",
@@ -15,9 +15,12 @@
     "react-dom": "19.2.0"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.5",
     "@types/node": "24.6.1",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.1.6",
     "typescript": "5.8.2"
   }
 }

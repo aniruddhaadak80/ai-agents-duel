@@ -25,8 +25,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="\${kalam.variable} \\">
-      <body>
+    <html lang="en" className={`${kalam.variable} ${patrickHand.variable}`}>
+      <body className="app-shell">
         {children}
       </body>
     </html>

@@ -3,20 +3,28 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
-  AgentProfile,
   AgentRun,
   AutonomyMode,
   DashboardSnapshot,
   EscalationPolicy,
   PublishTarget,
+  RunStatus,
   UpdateControlInput,
+  WorkflowTemplate,
 } from "@/lib/agent-duel/types";
 
 type CommandCenterProps = {
   mode?: "home" | "control-room";
 };
 
+type RunResponse = {
+  run: AgentRun;
+  snapshot: DashboardSnapshot;
+  enrichedByModel?: boolean;
+};
+
 const numberFormatter = new Intl.NumberFormat("en-US");
+const durationFormatter = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 
 async function getJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   const response = await fetch(input, {
@@ -36,437 +44,664 @@ async function getJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+function formatDuration(durationMs: number) {
+  const minutes = Math.max(1, Math.round(durationMs / 60000));
+  return `${durationFormatter.format(minutes)} min`;
+}
+
+function statusLabel(status: RunStatus) {
+  if (status === "needs-review") return "Needs review";
+  return status.charAt(0).toUpperCase() + status.slice(1);
+}
+
+function findWorkflow(snapshot: DashboardSnapshot | null, workflowId: string | null) {
+  if (!snapshot || !workflowId) return null;
+  return snapshot.workflows.find((workflow) => workflow.id === workflowId) ?? null;
+}
+
+function findRun(snapshot: DashboardSnapshot | null, runId: string | null) {
+  if (!snapshot || !runId) return null;
+  return snapshot.runs.find((run) => run.id === runId) ?? null;
+}
+
+function findAgent(snapshot: DashboardSnapshot | null, agentId: string | null) {
+  if (!snapshot || !agentId) return null;
+  return snapshot.agents.find((agent) => agent.id === agentId) ?? null;
+}
+
 export function AgentCommandCenter({ mode = "home" }: CommandCenterProps) {
   const [snapshot, setSnapshot] = useState<DashboardSnapshot | null>(null);
+  const [selectedWorkflowId, setSelectedWorkflowId] = useState<string | null>(null);
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
-  const [objective, setObjective] = useState("Draft an unconventional narrative...");
-  
-  const [customSwarmAgents, setCustomSwarmAgents] = useState<string[]>([]);
-  const [customSwarmObjective, setCustomSwarmObjective] = useState("Scan global networks and execute an algorithmic market hedge...");
-
+  const [objective, setObjective] = useState("");
+  const [context, setContext] = useState("");
+  const [runFilter, setRunFilter] = useState<RunStatus | "all">("all");
   const [combatantA, setCombatantA] = useState<string | null>(null);
   const [combatantB, setCombatantB] = useState<string | null>(null);
   const [liveLogTicker, setLiveLogTicker] = useState<string[]>([
-    "SYS_INIT: Sketchbook opened. Pencils sharpened.",
-    "NETWORK: Awaiting creative sparks.",
+    "control-room: multi-agent board initializing",
+    "status: waiting for operator objective",
   ]);
   const [glitchMode, setGlitchMode] = useState(false);
-
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!snapshot) return;
-    const interval = setInterval(() => {
-      const activeAgents = snapshot.agents.filter(a => a.status !== "paused");
-      if (activeAgents.length > 0) {
-        const randomAgent = activeAgents[Math.floor(Math.random() * activeAgents.length)];
-        const events = [
-          `[${randomAgent.name}] doodled a new idea.`,
-          `[${randomAgent.name}] erased a mistake.`,
-          `[${randomAgent.name}] highlighted a key insight.`,
-        ];
-        const evt = events[Math.floor(Math.random() * events.length)];
-        setLiveLogTicker(prev => [...prev.slice(-4), evt]);
-      }
-    }, 2500);
-    return () => clearInterval(interval);
-  }, [snapshot]);
+  async function refreshSnapshot() {
+    const data = await getJson<DashboardSnapshot>("/api/control-room");
+    setSnapshot(data);
+    return data;
+  }
 
   useEffect(() => {
     let active = true;
+
     getJson<DashboardSnapshot>("/api/control-room")
       .then((data) => {
         if (!active) return;
         setSnapshot(data);
-        setSelectedAgentId(data.agents[0]?.id ?? null);
+        const defaultWorkflow = data.workflows[0] ?? null;
+        const defaultAgentId = defaultWorkflow?.recommendedAgentIds[0] ?? data.agents[0]?.id ?? null;
+        setSelectedWorkflowId(defaultWorkflow?.id ?? null);
+        setSelectedAgentId(defaultAgentId);
+        setObjective(defaultWorkflow?.defaultObjective ?? "");
+        setContext("Add constraints, audience details, or links the agents should respect.");
+        setSelectedRunId(data.runs[0]?.id ?? null);
+        setCombatantA(data.agents[0]?.id ?? null);
+        setCombatantB(data.agents[1]?.id ?? null);
       })
       .catch((loadError: unknown) => {
         if (!active) return;
-        setError(loadError instanceof Error ? loadError.message : "Unable to load the sketchbook.");
+        setError(loadError instanceof Error ? loadError.message : "Unable to load the command center.");
       })
       .finally(() => {
         if (active) setIsLoading(false);
       });
-    return () => { active = false; };
+
+    return () => {
+      active = false;
+    };
   }, []);
+
+  useEffect(() => {
+    if (!snapshot) return;
+
+    const interval = setInterval(() => {
+      const recentRun = snapshot.runs[0];
+      const activeAgent = snapshot.agents.find((agent) => agent.status === "running") ?? snapshot.agents[0];
+      const nextEvent =
+        recentRun && activeAgent
+          ? `${activeAgent.name}: ${recentRun.status === "needs-review" ? "awaiting operator sign-off" : "pushing workflow toward delivery"}`
+          : "board: no active workstreams";
+      setLiveLogTicker((current) => [...current.slice(-4), nextEvent]);
+    }, 3200);
+
+    return () => clearInterval(interval);
+  }, [snapshot]);
+
+  useEffect(() => {
+    if (!snapshot) return;
+
+    if (selectedWorkflowId && !snapshot.workflows.some((workflow) => workflow.id === selectedWorkflowId)) {
+      setSelectedWorkflowId(snapshot.workflows[0]?.id ?? null);
+    }
+
+    if (selectedAgentId && !snapshot.agents.some((agent) => agent.id === selectedAgentId)) {
+      setSelectedAgentId(snapshot.agents[0]?.id ?? null);
+    }
+
+    if (selectedRunId && !snapshot.runs.some((run) => run.id === selectedRunId)) {
+      setSelectedRunId(snapshot.runs[0]?.id ?? null);
+    }
+  }, [snapshot, selectedAgentId, selectedRunId, selectedWorkflowId]);
+
+  const workflows = snapshot?.workflows ?? [];
+  const agents = snapshot?.agents ?? [];
+  const runs = snapshot?.runs ?? [];
+  const reviewQueue = runs.filter((run) => run.status === "needs-review");
+  const filteredRuns = runFilter === "all" ? runs : runs.filter((run) => run.status === runFilter);
+  const currentWorkflow = findWorkflow(snapshot, selectedWorkflowId) ?? workflows[0] ?? null;
+  const currentAgent = findAgent(snapshot, selectedAgentId) ?? agents[0] ?? null;
+  const selectedRun = findRun(snapshot, selectedRunId) ?? filteredRuns[0] ?? runs[0] ?? null;
+
+  function applyWorkflowTemplate(workflow: WorkflowTemplate) {
+    setSelectedWorkflowId(workflow.id);
+    setObjective(workflow.defaultObjective);
+    setSelectedAgentId(workflow.recommendedAgentIds[0] ?? agents[0]?.id ?? null);
+    setFeedback(`Loaded ${workflow.title}.`);
+    setError(null);
+  }
+
+  async function handleControlUpdate(payload: UpdateControlInput, successMessage?: string) {
+    setError(null);
+    setFeedback(null);
+    setIsSubmitting(true);
+    try {
+      const nextSnapshot = await getJson<DashboardSnapshot>("/api/control-room/control", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      setSnapshot(nextSnapshot);
+      if (successMessage) {
+        setFeedback(successMessage);
+      }
+    } catch (requestError: unknown) {
+      setError(requestError instanceof Error ? requestError.message : "Unable to update controls.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleCreateRun() {
+    if (!selectedWorkflowId || !objective.trim()) {
+      setError("Pick a workflow and write an objective.");
+      return;
+    }
+
+    setError(null);
+    setFeedback(null);
+    setIsSubmitting(true);
+    try {
+      const response = await getJson<RunResponse>("/api/control-room/run", {
+        method: "POST",
+        body: JSON.stringify({
+          workflowId: selectedWorkflowId,
+          agentId: selectedAgentId,
+          objective,
+          context,
+        }),
+      });
+      setSnapshot(response.snapshot);
+      setSelectedRunId(response.run.id);
+      setFeedback(response.enrichedByModel ? "Workflow executed with Gemini enrichment." : "Workflow executed with the local orchestration engine.");
+      setLiveLogTicker((current) => [...current.slice(-4), `run:${response.run.title} created`]);
+    } catch (runError: unknown) {
+      setError(runError instanceof Error ? runError.message : "Unable to create run.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   async function handlePulseSystem() {
     setError(null);
     setFeedback(null);
     setIsSubmitting(true);
     setGlitchMode(true);
-    setTimeout(() => setGlitchMode(false), 3000);
+    window.setTimeout(() => setGlitchMode(false), 2200);
     try {
       const response = await getJson<{ snapshot: DashboardSnapshot }>("/api/control-room/pulse", { method: "POST" });
       setSnapshot(response.snapshot);
-      setLiveLogTicker(prev => [...prev.slice(-4), "⚠️ CRITICAL INK SPILL ⚠️"]);
-      setFeedback("Ink spilled! Chaos anomalies deployed.");
-    } catch (runError: unknown) {
-      setError(runError instanceof Error ? runError.message : "Unable to pulse system.");
+      setFeedback("System pulse applied to the board.");
+      setLiveLogTicker((current) => [...current.slice(-4), "system:pulse reprioritized queues"]);
+    } catch (pulseError: unknown) {
+      setError(pulseError instanceof Error ? pulseError.message : "Unable to pulse system.");
     } finally {
       setIsSubmitting(false);
     }
   }
 
   async function handleAgentDuel() {
-    if (!combatantA || !combatantB) return setError("Select two agents to duel.");
+    if (!combatantA || !combatantB) {
+      setError("Select two agents for the sandbox duel.");
+      return;
+    }
+
     setError(null);
     setFeedback(null);
     setIsSubmitting(true);
     try {
       const response = await getJson<{ snapshot: DashboardSnapshot; duelLog: string }>("/api/control-room/duel", {
         method: "POST",
-        body: JSON.stringify({ agent1Id: combatantA, agent2Id: combatantB })
+        body: JSON.stringify({ agent1Id: combatantA, agent2Id: combatantB }),
       });
       setSnapshot(response.snapshot);
-      setLiveLogTicker(prev => [...prev.slice(-4), response.duelLog]);
-      setFeedback("Duel resolved.");
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Duel failed.");
+      setFeedback("Sandbox duel completed.");
+      setLiveLogTicker((current) => [...current.slice(-4), response.duelLog]);
+    } catch (duelError: unknown) {
+      setError(duelError instanceof Error ? duelError.message : "Duel failed.");
     } finally {
       setIsSubmitting(false);
     }
   }
 
-  async function handleSimulateSwarm(workflowName: string, tasks: {agentId: string, objective: string}[]) {
-    setError(null);
-    setFeedback(`Dispatching ${workflowName} Swarm Tasks...`);
-    setIsSubmitting(true);
-    try {
-      for (const task of tasks) {
-        await fetch("/api/control-room/run", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(task),
-        });
-      }
-      const data = await getJson<DashboardSnapshot>("/api/control-room");
-      setSnapshot(data);
-      setLiveLogTicker(prev => [...prev.slice(-3), `🌐 OVERRIDE [${workflowName.toUpperCase()}] SWARM INITIATED 🌐`]);
-      setFeedback(`Swarm populated successfully. Check the gallery!`);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Swarm failed.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
-  const toggleCustomAgent = (id: string) => {
-    setCustomSwarmAgents(prev => prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]);
-  };
-
-  async function handleCustomSwarm() {
-    if (customSwarmAgents.length === 0 || !customSwarmObjective.trim()) {
-      return setError("Select at least one agent and define an objective.");
-    }
-    const tasks = customSwarmAgents.map(agentId => ({
-      agentId,
-      objective: customSwarmObjective
-    }));
-    await handleSimulateSwarm("CUSTOM PROTOCOL", tasks);
-    setCustomSwarmAgents([]);
-  }
-
-  async function handleCreateRun() {
-    if (!selectedAgentId || !objective.trim()) return;
-    setError(null);
-    setFeedback(null);
-    setIsSubmitting(true);
-    try {
-      const response = await getJson<{ snapshot: DashboardSnapshot; run: AgentRun }>("/api/control-room/run", {
-        method: "POST",
-        body: JSON.stringify({ agentId: selectedAgentId, objective }),
-      });
-      setSnapshot(response.snapshot);
-      setSelectedRunId(response.run.id);
-      setFeedback(`Created ${response.run.title}.`);
-    } catch (runError: unknown) {
-      setError(runError instanceof Error ? runError.message : "Unable to run.");
-    } finally {
-      setIsSubmitting(false);
-    }
+  if (isLoading) {
+    return (
+      <main className="command-center-shell">
+        <section className="hero-section compact-hero">
+          <div className="section-chip">Booting board</div>
+          <h1>Loading the control room</h1>
+          <p className="hero-lead">Hydrating workflows, review gates, and recent run history.</p>
+        </section>
+      </main>
+    );
   }
 
   return (
-    <main className={glitchMode ? "global-meltdown" : ""}>
-      <div className="holo-overlay"></div>
+    <main className={`command-center-shell${glitchMode ? " global-meltdown" : ""}`}>
+      <div className="holo-overlay" />
       <div className="neural-wire">
         <div className="neural-wire-content">
-          {liveLogTicker.map((log, i) => (
-            <span key={i} className="wire-item">{log}</span>
+          {liveLogTicker.map((log, index) => (
+            <span key={`${log}-${index}`} className="wire-item">
+              {log}
+            </span>
           ))}
         </div>
       </div>
 
       <div className="top-nav-container">
         <nav className="top-nav">
-          <div className="brand-logo">{'{agent.sketch}'}</div>
+          <div className="brand-logo">multi.agent.studio</div>
           <div className="nav-links">
-            <Link href="/" className="wavy-link">Agents</Link>
-            <a href="#profiles" className="wavy-link">Gallery</a>
-            <Link href="/control-room" className="wavy-link">Desk</Link>
+            <Link href="/" className="wavy-link">Home</Link>
+            <a href="#workflows" className="wavy-link">Workflows</a>
+            <a href="#mission-board" className="wavy-link">Runs</a>
+            <Link href="/control-room" className="wavy-link">Control Room</Link>
           </div>
-          <a href="https://github.com/aniruddhaadak80/ai-agents-duel" target="_blank" rel="noopener noreferrer" className="github-link" title="Source">
+          <a
+            href="https://github.com/aniruddhaadak80/ai-agents-duel"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="github-link"
+            title="Source"
+          >
             <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+              <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
             </svg>
           </a>
         </nav>
       </div>
 
-      {/* Hero Section */}
-      <section className="hero-section">
-        <div className="floating-icon" style={{ top: "20%", left: "10%" }}>🎨</div>
-        <div className="floating-icon float-anim" style={{ top: "60%", right: "15%", animationDelay: "1s" }}>✨</div>
-        <div className="floating-icon float-anim" style={{ top: "30%", right: "25%", animationDelay: "2s" }}>✏️</div>
-        
-        <h1>
-          Agent Sketchpad
-          <svg className="hero-svg-underline" viewBox="0 0 300 20" preserveAspectRatio="none">
-            <path d="M5,15 Q100,5 150,15 T300,10" fill="none" stroke="var(--accent-orange)" strokeWidth="4" strokeLinecap="round"/>
-          </svg>
-        </h1>
-        <p className="hero-lead">Watch AI operators doodle their thoughts, compete in organic arenas, and build messy, beautiful narratives.</p>
-        <div className="hero-actions">
-          <button className="sketch-btn primary" onClick={() => void handlePulseSystem()} disabled={isSubmitting}>
-             Spill Ink (Pulse)
-          </button>
-          <a href="#controls" className="sketch-btn secondary">Draw Prompt</a>
+      <section className="hero-section hero-grid">
+        <div className="hero-copy">
+          <div className="section-chip">Build your own multi-agent system</div>
+          <h1>{mode === "control-room" ? "Operator Control Room" : "Multi-Agent Studio"}</h1>
+          <p className="hero-lead">
+            A workflow-first command center that turns one broad request into a planner, researcher, builder, and reviewer pipeline.
+            It is tuned for real users, not just demos: fast presets, visible review gates, agent controls, and optional Gemini enrichment.
+          </p>
+          <div className="hero-actions">
+            <button className="sketch-btn primary" onClick={() => void handleCreateRun()} disabled={isSubmitting || !selectedWorkflowId}>
+              Run current workflow
+            </button>
+            <button className="sketch-btn secondary" onClick={() => void handlePulseSystem()} disabled={isSubmitting}>
+              Rebalance queues
+            </button>
+          </div>
+          <div className="hero-note">
+            The app works fully in-memory out of the box and upgrades itself automatically when `GEMINI_API_KEY` is present on Vercel.
+          </div>
         </div>
-        
-        {/* Global Telemetry Radar */}
-        <div style={{ marginTop: '3rem', display: 'flex', gap: '2rem', justifyContent: 'center', flexWrap: 'wrap', fontFamily: 'monospace', fontSize: '1.1rem', background: '#000', color: '#0f0', padding: '1rem 2rem', borderRadius: '8px', border: '2px solid #0f0', boxShadow: '5px 5px 0px 0px rgba(0,255,0,0.3)', transform: "rotate(-1deg)", maxWidth: "800px", margin: "3rem auto" }}>
-          <div><strong>UPTIME:</strong> <span className={glitchMode ? "glitch-text" : ""}>{new Date().toISOString().split('T')[1].split('.')[0]}</span></div>
-          <div><strong>ACTIVE AGENTS:</strong> {snapshot?.metrics.activeAgents ?? 0}/4</div>
-          <div><strong>TASKS RUNNING:</strong> {numberFormatter.format(snapshot?.metrics.runningNow ?? 0)}</div>
-          <div><strong>GLOBAL CONFIDENCE:</strong> {snapshot?.metrics.averageConfidence ?? 0}%</div>
-          <div><strong>PROTOCOL:</strong> <span style={{ color: "var(--accent-orange)" }}>{snapshot?.controls.autonomyMode.toUpperCase() ?? 'AWAITING'}</span></div>
+
+        <div className="hero-panel sketch-card telemetry-panel">
+          <div className="panel-header-row">
+            <h2>Live system state</h2>
+            <span className="status-badge status-running">{snapshot?.controls.autonomyMode ?? "supervised"}</span>
+          </div>
+          <div className="telemetry-grid">
+            <div>
+              <span className="metric-label">Active agents</span>
+              <strong>{numberFormatter.format(snapshot?.metrics.activeAgents ?? 0)}</strong>
+            </div>
+            <div>
+              <span className="metric-label">Runs in flight</span>
+              <strong>{numberFormatter.format(snapshot?.metrics.runningNow ?? 0)}</strong>
+            </div>
+            <div>
+              <span className="metric-label">Review queue</span>
+              <strong>{numberFormatter.format(snapshot?.metrics.reviewQueue ?? 0)}</strong>
+            </div>
+            <div>
+              <span className="metric-label">Average confidence</span>
+              <strong>{numberFormatter.format(snapshot?.metrics.averageConfidence ?? 0)}%</strong>
+            </div>
+          </div>
+          <div className="metric-strip">
+            <span>Publish target: {snapshot?.controls.publishTarget}</span>
+            <span>Escalation: {snapshot?.controls.escalationPolicy}</span>
+          </div>
         </div>
       </section>
 
-      {/* Feature Grid: Profiles */}
-      <section id="profiles">
-        <h2 style={{ fontSize: '3rem', textAlign: 'center', marginBottom: '3rem' }}>The Creatives</h2>
-        <div className="feature-grid">
-          {snapshot?.agents.map((agent, i) => {
-            const rot = i % 2 === 0 ? "2deg" : "-1deg";
-            return (
-              <div key={agent.id} className="feature-card sketch-card float-anim" style={{ transform: `rotate(${rot})` }}>
-                <div className="thumbtack"></div>
-                  <div className="icon-circle">🤖</div>
-                <h3 style={{cursor:"pointer"}} onClick={() => setSelectedAgentId(agent.id)}>{agent.name}</h3>
-                <p><strong>{agent.specialization}</strong></p>
-                <p>{agent.description}</p>
-                <div className="agent-stats">
-                  <span style={{color: "var(--accent-red)"}}>📈 {agent.successRate}% SR</span>
-                  <span>{agent.queueDepth} Queued</span>
-                </div>
-              </div>
-            );
-          })}
+      <section id="workflows">
+        <div className="section-heading-row">
+          <div>
+            <div className="section-chip">Templates</div>
+            <h2>Workflow library</h2>
+          </div>
+          <p className="section-intro">Pick a workflow, adjust the objective, and let the agent team route the work end to end.</p>
         </div>
-      </section>
-
-      {/* Project Gallery: Live Runs */}
-      <section id="gallery">
-        <h2 style={{ fontSize: '3rem', textAlign: 'center', marginBottom: '3rem' }}>Recent Masterpieces</h2>
-        <div className="gallery-layout">
-          {snapshot?.runs.slice(0, 4).map((run) => (
-            <div key={run.id} className="gallery-item" style={{ transform: `rotate(${Math.random() * 2 - 1}deg)` }}>
-              <div className="polaroid sketch-card">
-                <div className="polaroid-tape tape-top-left"></div>
-                <div className="polaroid-tape tape-top-right"></div>
-                <h3>{run.title}</h3>
-                <p><em>"{run.objective}"</em></p>
-                <div style={{ borderTop: "2px dashed #ccc", paddingTop: "1rem", marginTop: "1rem" }}>
-                  <p><strong>Status:</strong> <span style={{ color: run.status === 'failed' ? 'red' : 'green' }}>{run.status}</span></p>
-                  <p><strong>Confidence:</strong> {run.confidence}%</p>
-                </div>
+        <div className="workflow-grid">
+          {workflows.map((workflow) => (
+            <article
+              key={workflow.id}
+              className={`sketch-card workflow-card${selectedWorkflowId === workflow.id ? " workflow-card-active" : ""}`}
+            >
+              <div className="workflow-card-top">
+                <span className="audience-pill">{workflow.audience}</span>
+                <span className="status-badge status-completed">{workflow.stages.length} stages</span>
               </div>
-              <div className="polaroid-desc" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}><div><h4 style={{ fontSize: "2rem", color: "var(--accent-purple)" }}>Agent Output</h4><p style={{ whiteSpace: "pre-wrap", background: "#f0f0f0", padding: "1rem", borderRadius: "8px", border: "1px solid #ccc", fontFamily: "monospace", fontSize: "0.9rem", color: "#000" }}>{run.summary}</p></div><div><h4 style={{ fontSize: "2rem" }}>Event Log</h4><ul style={{ listStyleType: "none", padding: 0 }}>{run.events.map((ev, i) => <li key={i} style={{ marginBottom: "0.5rem" }}>⚡ {ev}</li>)}</ul></div></div></div>
+              <h3>{workflow.title}</h3>
+              <p>{workflow.description}</p>
+              <div className="tag-row">
+                {workflow.tags.map((tag) => (
+                  <span key={tag} className="tag-pill">{tag}</span>
+                ))}
+              </div>
+              <p className="workflow-deliverable">Deliverable: {workflow.deliverable}</p>
+              <button className="sketch-btn tertiary" onClick={() => applyWorkflowTemplate(workflow)}>
+                Use this workflow
+              </button>
+            </article>
           ))}
         </div>
       </section>
 
-      {/* Enterprise / Futuristic Swarm Use Cases */}
-      <section id="swarm" style={{ marginTop: "4rem", marginBottom: "4rem", position: "relative" }}>
-        <h2 style={{ fontSize: '3rem', textAlign: 'center', marginBottom: '1rem', fontFamily: 'var(--font-kalam)' }}>
-          🚀 Swarm Architectures
-        </h2>
-        <p style={{ textAlign: "center", marginBottom: "3rem", fontSize: "1.2rem", maxWidth: "700px", margin: "0 auto 3rem auto" }}>
-          One-click simulation of <strong>industry-grade multi-agent collaboration</strong>. 
-          See how distinct AI entities coordinate to tackle complex real-world pipelines.
-        </p>
-        
-        <div className="feature-grid swarm-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
-          
-          {/* Use Case 1: Cybersecurity */}
-          <div className="sketch-card float-anim" style={{ transform: "rotate(-1deg)", background: "var(--accent-teal)" }}>
-            <h3 style={{color: "#fff"}}>🛡️ Cyber Sec Audit</h3>
-            <p style={{color: "#ffe", marginBottom: "1rem"}}>Continuous threat modeling + code verification swarm.</p>
-            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
-               <span style={{ fontSize: "0.8rem", background: "#fff", padding: "2px 6px", borderRadius: "10px" }}>Red Team AI</span>
-               <span style={{ fontSize: "0.8rem", background: "#fff", padding: "2px 6px", borderRadius: "10px" }}>Log Parser AI</span>
+      <section className="dashboard-grid">
+        <div className="stack-column">
+          <div className="sticky-note-form mission-form">
+            <div className="panel-header-row">
+              <h2>Mission composer</h2>
+              <span className="status-badge status-review">{currentWorkflow?.title ?? "No workflow"}</span>
             </div>
-            <button className="sketch-btn primary" onClick={() => handleSimulateSwarm("Cyber Sec", [
-              { agentId: "signal-curator", objective: "Analyze live server logs for zero-day behavioral anomalies." },
-              { agentId: "vector-ops", objective: "Harden firewall policies and route suspicious IPs to dead zones." }
-            ])}>Deploy Audit</button>
+            <label htmlFor="workflow-select"><strong>Workflow</strong></label>
+            <select
+              id="workflow-select"
+              value={selectedWorkflowId ?? ""}
+              onChange={(event) => {
+                const workflow = workflows.find((item) => item.id === event.target.value);
+                if (workflow) {
+                  applyWorkflowTemplate(workflow);
+                }
+              }}
+            >
+              {workflows.map((workflow) => (
+                <option key={workflow.id} value={workflow.id}>{workflow.title}</option>
+              ))}
+            </select>
+
+            <label htmlFor="agent-select"><strong>Lead agent</strong></label>
+            <select id="agent-select" value={selectedAgentId ?? ""} onChange={(event) => setSelectedAgentId(event.target.value)}>
+              {agents.map((agent) => (
+                <option key={agent.id} value={agent.id}>{agent.name}</option>
+              ))}
+            </select>
+
+            <label htmlFor="objective-input"><strong>Objective</strong></label>
+            <textarea id="objective-input" rows={4} value={objective} onChange={(event) => setObjective(event.target.value)} />
+
+            <label htmlFor="context-input"><strong>Context and constraints</strong></label>
+            <textarea id="context-input" rows={4} value={context} onChange={(event) => setContext(event.target.value)} />
+
+            <button className="sketch-btn primary full-width" onClick={() => void handleCreateRun()} disabled={isSubmitting || !selectedWorkflowId}>
+              Dispatch workflow
+            </button>
+            {feedback ? <p className="feedback-line success-line">{feedback}</p> : null}
+            {error ? <p className="feedback-line error-line">{error}</p> : null}
           </div>
 
-          {/* Use Case 2: Marketing & Growth */}
-          <div className="sketch-card float-anim" style={{ transform: "rotate(1deg)", background: "var(--accent-yellow)" }}>
-            <h3>📈 Growth Engine</h3>
-            <p style={{ marginBottom: "1rem" }}>A/B test generation + realtime sentiment curation.</p>
-            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
-               <span style={{ fontSize: "0.8rem", background: "#fff", padding: "2px 6px", borderRadius: "10px" }}>Copywriter AI</span>
-               <span style={{ fontSize: "0.8rem", background: "#fff", padding: "2px 6px", borderRadius: "10px" }}>Analytics AI</span>
+          <div className="sketch-card control-card">
+            <div className="panel-header-row">
+              <h2>Operator controls</h2>
+              <button className="text-action" onClick={() => void refreshSnapshot()}>Refresh</button>
             </div>
-            <button className="sketch-btn primary" onClick={() => handleSimulateSwarm("Growth Matrix", [
-              { agentId: "atlas-story", objective: "Draft 3 aggressive ad hooks for a Gen-Z health drink." },
-              { agentId: "relay-console", objective: "Monitor A/B metric streams and escalate underperforming assets." }
-            ])}>Test Campaigns</button>
-          </div>
-
-          {/* Use Case 3: Autonomous Software Dev */}
-          <div className="sketch-card float-anim" style={{ transform: "rotate(-2deg)", background: "var(--accent-blue)", color: "#fff" }}>
-            <h3 style={{color: "#fff"}}>💻 Auto-DevOps</h3>
-            <p style={{color: "#ffe", marginBottom: "1rem" }}>Feature coding + automated deployment validation.</p>
-            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
-               <span style={{ fontSize: "0.8rem", background: "#000", color: "#fff", padding: "2px 6px", borderRadius: "10px" }}>Code Weaver</span>
-               <span style={{ fontSize: "0.8rem", background: "#000", color: "#fff", padding: "2px 6px", borderRadius: "10px" }}>QA Reviewer</span>
+            <div className="control-grid">
+              <label>
+                <span>Autonomy</span>
+                <select
+                  value={snapshot?.controls.autonomyMode ?? "supervised"}
+                  onChange={(event) => void handleControlUpdate({ type: "set-autonomy-mode", value: event.target.value as AutonomyMode }, "Autonomy mode updated.")}
+                >
+                  <option value="guardrailed">Guardrailed</option>
+                  <option value="supervised">Supervised</option>
+                  <option value="aggressive">Aggressive</option>
+                </select>
+              </label>
+              <label>
+                <span>Publish target</span>
+                <select
+                  value={snapshot?.controls.publishTarget ?? "notion"}
+                  onChange={(event) => void handleControlUpdate({ type: "set-publish-target", value: event.target.value as PublishTarget }, "Publish target updated.")}
+                >
+                  <option value="notion">Notion</option>
+                  <option value="slack">Slack</option>
+                  <option value="linear">Linear</option>
+                  <option value="email">Email</option>
+                </select>
+              </label>
+              <label>
+                <span>Escalation</span>
+                <select
+                  value={snapshot?.controls.escalationPolicy ?? "confidence-threshold"}
+                  onChange={(event) => void handleControlUpdate({ type: "set-escalation-policy", value: event.target.value as EscalationPolicy }, "Escalation policy updated.")}
+                >
+                  <option value="human-first">Human first</option>
+                  <option value="confidence-threshold">Confidence threshold</option>
+                  <option value="sla-first">SLA first</option>
+                </select>
+              </label>
             </div>
-            <button className="sketch-btn primary" onClick={() => handleSimulateSwarm("AutoDevOps", [
-              { agentId: "vector-ops", objective: "Refactor legacy authentication routes into serverless Edge functions." },
-              { agentId: "atlas-story", objective: "Write comprehensive technical documentation for the new auth system." },
-              { agentId: "signal-curator", objective: "Audit developer pull request for backward-compatibility breaks." }
-            ])}>Ship Feature</button>
-          </div>
-          
-          {/* Use Case 4: FinTech / Quant Trading */}
-          <div className="sketch-card float-anim" style={{ transform: "rotate(1deg)", background: "#1a1a1a", color: "#00ffcc" }}>
-            <h3 style={{color: "#00ffcc"}}>💰 Quant AI</h3>
-            <p style={{color: "#aaa", marginBottom: "1rem" }}>High-frequency sentiment + execution bots.</p>
-            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
-               <span style={{ fontSize: "0.8rem", background: "#00ffcc", color: "#000", padding: "2px 6px", borderRadius: "10px" }}>News Scraper</span>
-               <span style={{ fontSize: "0.8rem", background: "#00ffcc", color: "#000", padding: "2px 6px", borderRadius: "10px" }}>Algorithmic Trader</span>
+            <div className="toggle-row">
+              <button
+                className={`toggle-pill${snapshot?.controls.autoRetry ? " toggle-pill-active" : ""}`}
+                onClick={() => void handleControlUpdate({ type: "set-auto-retry", value: !snapshot?.controls.autoRetry }, "Auto-retry updated.")}
+              >
+                Auto retry {snapshot?.controls.autoRetry ? "on" : "off"}
+              </button>
+              <button
+                className={`toggle-pill${snapshot?.controls.reviewRequired ? " toggle-pill-active" : ""}`}
+                onClick={() => void handleControlUpdate({ type: "set-review-required", value: !snapshot?.controls.reviewRequired }, "Review gate updated.")}
+              >
+                Review gate {snapshot?.controls.reviewRequired ? "on" : "off"}
+              </button>
             </div>
-            <button className="sketch-btn" style={{ background: "#00ffcc", color: "#000", border: "2px solid #00ffcc" }} onClick={() => handleSimulateSwarm("Quant Hedge", [
-              { agentId: "signal-curator", objective: "Analyze Twitter and Bloomberg feeds for semiconductor supply chain disruption." },
-              { agentId: "vector-ops", objective: "Execute correlated micro-trades against NVDA and ASML instantly." }
-            ])}>Execute Hedge</button>
           </div>
-          
-          {/* Use Case 5: Medical / BioTech */}
-          <div className="sketch-card float-anim" style={{ transform: "rotate(-1deg)", background: "#ffe0f0" }}>
-            <h3 style={{color: "#d61c6b"}}>🧬 BioTech AI</h3>
-            <p style={{color: "#801241", marginBottom: "1rem" }}>Protein folding prediction & clinical auditing.</p>
-            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
-               <span style={{ fontSize: "0.8rem", background: "#d61c6b", color: "#fff", padding: "2px 6px", borderRadius: "10px" }}>Molecular Sim</span>
-               <span style={{ fontSize: "0.8rem", background: "#d61c6b", color: "#fff", padding: "2px 6px", borderRadius: "10px" }}>Trial Auditor</span>
-            </div>
-            <button className="sketch-btn primary" onClick={() => handleSimulateSwarm("BioTech Gen", [
-              { agentId: "relay-console", objective: "Simulate folding permutations for experimental enzyme #44B." },
-              { agentId: "atlas-story", objective: "Compile simulation data into FDA-compliant clinical readouts." }
-            ])}>Run Trials</button>
-          </div>
-
-        </div>
-        
-        {/* Custom Swarm Matrix Sandbox */}
-        <div className="sticky-note-form custom-swarm-builder float-anim" style={{ maxWidth: "100%", marginTop: "3rem", background: "url('data:image/svg+xml;utf8,<svg width=\"20\" height=\"20\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"2\" cy=\"2\" r=\"1\" fill=\"rgba(0,0,0,0.1)\"/></svg>')", backgroundColor: "#fafafa" }}>
-           <h3 style={{ fontSize: '2.5rem', marginBottom: '1rem', color: "var(--accent-purple)", textAlign: "center" }}>🧪 Custom Swarm Sandbox</h3>
-           <p style={{textAlign: "center", marginBottom: "2rem"}}>Hand-pick your own network of agents and orchestrate an autonomous mass-deployment.</p>
-           
-           <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", justifyContent: "center", marginBottom: "2rem" }}>
-             {snapshot?.agents.map(a => (
-               <label key={a.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", border: "2px solid #ccc", borderRadius: "15px", cursor: "pointer", background: customSwarmAgents.includes(a.id) ? "var(--accent-purple)" : "#fff", color: customSwarmAgents.includes(a.id) ? "#fff" : "#000", fontWeight: "bold", transition: "all 0.2s ease" }}>
-                 <input type="checkbox" style={{ accentColor: "black", width: "20px", height: "20px" }} checked={customSwarmAgents.includes(a.id)} onChange={() => toggleCustomAgent(a.id)} />
-                 {a.name}
-               </label>
-             ))}
-           </div>
-
-           <label><strong>Unified Prime Directive:</strong></label>
-           <textarea rows={3} value={customSwarmObjective} onChange={(e) => setCustomSwarmObjective(e.target.value)} style={{ borderColor: "var(--accent-purple)", borderBottomWidth: "4px" }}></textarea>
-           
-           <button className="sketch-btn danger" style={{ width: '100%', textAlign: 'center', boxSizing: 'border-box', background: "var(--accent-purple)", color: "white", textTransform: "uppercase", letterSpacing: "1px", fontSize: "1.3rem" }} onClick={() => void handleCustomSwarm()} disabled={isSubmitting || customSwarmAgents.length === 0}>
-             ⚠️ Initialize Custom Protocol
-           </button>
         </div>
 
+        <div className="stack-column" id="mission-board">
+          <div className="sketch-card review-card">
+            <div className="panel-header-row">
+              <h2>Review queue</h2>
+              <span className="status-badge status-review">{reviewQueue.length} waiting</span>
+            </div>
+            <div className="review-list">
+              {reviewQueue.length === 0 ? <p className="muted-copy">No runs are waiting on human review.</p> : null}
+              {reviewQueue.map((run) => (
+                <article key={run.id} className="review-item">
+                  <div>
+                    <strong>{run.title}</strong>
+                    <p>{run.operatorBrief}</p>
+                  </div>
+                  <div className="review-actions">
+                    <button className="sketch-btn tertiary" onClick={() => setSelectedRunId(run.id)}>Inspect</button>
+                    <button className="sketch-btn primary" onClick={() => void handleControlUpdate({ type: "resolve-run", runId: run.id }, "Review resolved.")}>Resolve</button>
+                    <button className="sketch-btn secondary" onClick={() => void handleControlUpdate({ type: "retry-run", runId: run.id }, "Run retried.")}>Retry</button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+
+          <div className="sketch-card run-list-card">
+            <div className="panel-header-row">
+              <h2>Mission board</h2>
+              <select value={runFilter} onChange={(event) => setRunFilter(event.target.value as RunStatus | "all")} className="compact-select">
+                <option value="all">All runs</option>
+                <option value="completed">Completed</option>
+                <option value="running">Running</option>
+                <option value="needs-review">Needs review</option>
+                <option value="failed">Failed</option>
+              </select>
+            </div>
+            <div className="run-list">
+              {filteredRuns.map((run) => (
+                <button key={run.id} className={`run-list-item${selectedRun?.id === run.id ? " run-list-item-active" : ""}`} onClick={() => setSelectedRunId(run.id)}>
+                  <div className="run-list-main">
+                    <strong>{run.title}</strong>
+                    <span>{run.deliverable}</span>
+                  </div>
+                  <div className="run-list-meta">
+                    <span className={`status-badge status-${run.status}`}>{statusLabel(run.status)}</span>
+                    <span>{run.confidence}%</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       </section>
 
-      {/* Contact Form / Sticky Note Controls */}
-      <section id="controls" style={{ position: 'relative' }}>
-         <h2 style={{ fontSize: '3rem', textAlign: 'center', marginBottom: '3rem' }}>Operator's Desk</h2>
-         
-         <div className="sticky-note-form">
-           <div className="thumbtack" style={{ top: "10px" }}></div>
-           <h3 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>Create New Prompt</h3>
-           <label><strong>Select Agent:</strong></label>
-           <select value={selectedAgentId ?? ""} onChange={(e) => setSelectedAgentId(e.target.value)}>
-              {snapshot?.agents.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-           </select>
-           
-           <label><strong>Objective:</strong></label>
-           <textarea rows={4} value={objective} onChange={(e) => setObjective(e.target.value)}></textarea>
-           
-           <button className="sketch-btn primary" style={{ width: '100%', textAlign: 'center', boxSizing: 'border-box' }} onClick={() => void handleCreateRun()} disabled={isSubmitting}>
-             Submit Prompt 🚀
-           </button>
-           <p style={{ marginTop: '1rem', color: 'green', textAlign: 'center' }}>
-             {feedback}
-           </p>
-         </div>
+      <section className="detail-grid">
+        <div className="sketch-card detail-card">
+          <div className="panel-header-row">
+            <h2>Selected run</h2>
+            {selectedRun ? <span className={`status-badge status-${selectedRun.status}`}>{statusLabel(selectedRun.status)}</span> : null}
+          </div>
+          {selectedRun ? (
+            <>
+              <h3>{selectedRun.title}</h3>
+              <p className="detail-objective">{selectedRun.objective}</p>
+              <p className="detail-summary">{selectedRun.summary}</p>
+              <div className="detail-metrics">
+                <span>Confidence: {selectedRun.confidence}%</span>
+                <span>Duration: {formatDuration(selectedRun.durationMs)}</span>
+                <span>Deliverable: {selectedRun.deliverable}</span>
+              </div>
+              <div className="step-list">
+                {selectedRun.steps.map((step) => {
+                  const owner = agents.find((agent) => agent.id === step.ownerAgentId);
+                  return (
+                    <div key={`${selectedRun.id}-${step.label}`} className={`step-item step-${step.state}`}>
+                      <strong>{step.label}</strong>
+                      <span>{owner?.name ?? step.ownerAgentId}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="detail-columns">
+                <div>
+                  <h4>Agent contributions</h4>
+                  <div className="contribution-list">
+                    {selectedRun.contributions.map((item) => (
+                      <article key={`${selectedRun.id}-${item.agentId}-${item.title}`} className="mini-card">
+                        <strong>{item.title}</strong>
+                        <p>{item.content}</p>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h4>Artifacts</h4>
+                  <div className="artifact-list">
+                    {selectedRun.artifacts.map((artifact) => (
+                      <article key={`${selectedRun.id}-${artifact.label}`} className="mini-card">
+                        <strong>{artifact.label}</strong>
+                        <p>{artifact.value}</p>
+                      </article>
+                    ))}
+                  </div>
+                  <h4>Recommendations</h4>
+                  <ul className="plain-list">
+                    {selectedRun.recommendations.map((item) => (
+                      <li key={`${selectedRun.id}-${item}`}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </>
+          ) : (
+            <p className="muted-copy">Select a run to inspect its workflow path, artifacts, and recommendations.</p>
+          )}
+        </div>
 
-         {/* Duel Arena inside Desk area */}
-         <div className="sticky-note-form" style={{ transform: "rotate(-1deg)", marginTop: "4rem", backgroundColor: "var(--accent-blue)", color: "#fff" }}>
-           <div className="thumbtack" style={{ background: "var(--accent-yellow)" }}></div>
-           <h3 style={{ fontSize: '2.5rem', marginBottom: '1rem', color: "#fff" }}>Scribble Battle ⚔️</h3>
-           <p>Pit two agents against each other to steal creative juice.</p>
-           <div className="duel-selects">
-             <select value={combatantA ?? ""} onChange={(e) => setCombatantA(e.target.value)} style={{flex: 1, backgroundColor: "#fff"}}>
-               <option value="" disabled>Alpha...</option>
-               {snapshot?.agents.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-             </select>
-             <span className="duel-vs">VS</span>
-             <select value={combatantB ?? ""} onChange={(e) => setCombatantB(e.target.value)} style={{flex: 1, backgroundColor: "#fff"}}>
-               <option value="" disabled>Beta...</option>
-               {snapshot?.agents.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-             </select>
-           </div>
-           <button className="sketch-btn danger" style={{ width: '100%', textAlign: 'center', marginTop: "1.5rem", boxSizing: "border-box" }} onClick={() => void handleAgentDuel()} disabled={isSubmitting}>
-             Start Brawl! 🔥
-           </button>
-         </div>
+        <div className="stack-column">
+          <div className="sketch-card agent-roster-card">
+            <div className="panel-header-row">
+              <h2>Agent roster</h2>
+              {currentAgent ? <span className={`status-badge status-${currentAgent.status}`}>{currentAgent.role}</span> : null}
+            </div>
+            <div className="agent-roster">
+              {agents.map((agent) => (
+                <article key={agent.id} className={`agent-row${selectedAgentId === agent.id ? " agent-row-active" : ""}`}>
+                  <button className="agent-row-main" onClick={() => setSelectedAgentId(agent.id)}>
+                    <strong>{agent.name}</strong>
+                    <span>{agent.specialization}</span>
+                  </button>
+                  <div className="agent-row-meta">
+                    <span className={`status-badge status-${agent.status}`}>{agent.status}</span>
+                    <button className="text-action" onClick={() => void handleControlUpdate({ type: "toggle-agent", agentId: agent.id }, `${agent.name} status updated.`)}>
+                      {agent.status === "paused" ? "Resume" : "Pause"}
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+            {currentAgent ? (
+              <div className="agent-detail-panel">
+                <h3>{currentAgent.name}</h3>
+                <p>{currentAgent.description}</p>
+                <div className="metric-strip multi-line-strip">
+                  <span>Success rate: {currentAgent.successRate}%</span>
+                  <span>Queue depth: {currentAgent.queueDepth}</span>
+                  <span>Latency: {currentAgent.latencyMs}ms</span>
+                </div>
+                <p className="muted-copy">Ideal for: {currentAgent.idealFor.join(", ")}</p>
+                <p className="muted-copy">Last summary: {currentAgent.lastRunSummary}</p>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="sticky-note-form sandbox-card">
+            <div className="panel-header-row">
+              <h2>Sandbox duel</h2>
+              <span className="status-badge status-failed">playground</span>
+            </div>
+            <p className="muted-copy">A playful stress test that deliberately perturbs agent confidence and queue pressure.</p>
+            <div className="duel-selects">
+              <select value={combatantA ?? ""} onChange={(event) => setCombatantA(event.target.value)}>
+                {agents.map((agent) => (
+                  <option key={`a-${agent.id}`} value={agent.id}>{agent.name}</option>
+                ))}
+              </select>
+              <select value={combatantB ?? ""} onChange={(event) => setCombatantB(event.target.value)}>
+                {agents.map((agent) => (
+                  <option key={`b-${agent.id}`} value={agent.id}>{agent.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="sandbox-actions">
+              <button className="sketch-btn secondary" onClick={() => void handleAgentDuel()} disabled={isSubmitting}>Run duel</button>
+              <button className="sketch-btn tertiary" onClick={() => void handlePulseSystem()} disabled={isSubmitting}>Pulse board</button>
+            </div>
+          </div>
+        </div>
       </section>
 
-      <section style={{ maxWidth: "800px", margin: "4rem auto" }} className="sticky-note-form">
-        <h3 style={{ textDecoration: "underline", textDecorationStyle: "wavy", textDecorationColor: "var(--accent-teal)", fontSize: "2rem" }}>
-          Behind the Canvas 🎨
-        </h3>
-        <p style={{ marginTop: "1rem", fontSize: "1.2rem", lineHeight: "1.5" }}>
-          <strong>For Everyone (Even Non-Technical!):</strong> This is a magical "Digital Sketchbook" illusion! The robotic agents fighting and working above? They're simulated with complex math to look real. It's meant to spark your imagination—think about what a real team of intelligent AI agents could do together.
-        </p>
-        <p style={{ marginTop: "1rem", fontSize: "1.2rem", lineHeight: "1.5" }}>
-          <strong>For Builders & Developers:</strong> Want to build an actual AI command center?
-          <br/>
-          💡 <strong>Plug in Real AI:</strong> You can fork this repo and swap our simulated math inside <code>src/app/api/control-room</code> with actual OpenAI or Anthropic API keys.
-          <br/>
-          💡 <strong>Steal the UI:</strong> Love this wobbly, hand-drawn look? Go to the <a href="https://github.com/aniruddhaadak80/ai-agents-duel" target="_blank" rel="noreferrer" className="wavy-link" style={{color: "var(--accent-orange)"}}>GitHub repo</a>, grab <code>globals.css</code>, and steal the code for your own projects!
-        </p>
+      <section>
+        <div className="section-heading-row">
+          <div>
+            <div className="section-chip">Architecture</div>
+            <h2>How the system works</h2>
+          </div>
+          <p className="section-intro">This project follows the core multi-agent pattern from the DEV track: focused roles, orchestration, visible handoffs, and explicit review gates.</p>
+        </div>
+        <div className="architecture-grid">
+          {snapshot?.playbooks.map((playbook) => (
+            <article key={playbook.id} className="sketch-card architecture-card">
+              <h3>{playbook.title}</h3>
+              <p><strong>Trigger:</strong> {playbook.trigger}</p>
+              <p><strong>Response:</strong> {playbook.response}</p>
+            </article>
+          ))}
+        </div>
       </section>
 
-      <footer style={{ textAlign: "center", padding: "4rem", borderTop: "3px solid #1a1a1a", marginTop: "4rem", fontFamily: "var(--font-kalam)" }}>
-        <p>Handcrafted by <a href="https://github.com/aniruddhaadak80/ai-agents-duel" className="wavy-link" style={{color: "var(--accent-orange)"}}>Aniruddha Adak</a></p>
-        <p>&copy; {new Date().getFullYear()} Sketchbook System</p>
+      <footer className="footer-shell">
+        <p>Built as a deployable multi-agent system demo and starter for Vercel.</p>
+        <p>Use the README for setup, deployment, GitHub handoff, and DEV post guidance.</p>
       </footer>
     </main>
   );
 }
-
