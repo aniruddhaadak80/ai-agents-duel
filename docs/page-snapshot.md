@@ -1,0 +1,355 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e9]: "control-room: multi-agent board initializingstatus: waiting for operator objective"
+    - navigation [ref=e11]:
+      - generic [ref=e12]: multi.agent.studio
+      - generic [ref=e13]:
+        - link "Home" [ref=e14] [cursor=pointer]:
+          - /url: /
+        - link "Workflows" [ref=e15] [cursor=pointer]:
+          - /url: "#workflows"
+        - link "Runs" [ref=e16] [cursor=pointer]:
+          - /url: "#mission-board"
+        - link "Control Room" [ref=e17] [cursor=pointer]:
+          - /url: /control-room
+      - link "Source" [ref=e18] [cursor=pointer]:
+        - /url: https://github.com/aniruddhaadak80/ai-agents-duel
+        - img [ref=e19]
+    - generic [ref=e21]:
+      - generic [ref=e22]:
+        - generic [ref=e23]: Build your own multi-agent system
+        - heading "Multi-Agent Studio" [level=1] [ref=e24]
+        - paragraph [ref=e25]: "A workflow-first command center that turns one broad request into a planner, researcher, builder, and reviewer pipeline. It is tuned for real users, not just demos: fast presets, visible review gates, agent controls, and optional Gemini enrichment."
+        - generic [ref=e26]:
+          - button "Run current workflow" [ref=e27] [cursor=pointer]
+          - button "Rebalance queues" [ref=e28] [cursor=pointer]
+        - generic [ref=e29]: "The app works fully in-memory out of the box and upgrades itself automatically when `GEMINI_API_KEY` is present on Vercel."
+      - generic [ref=e30]:
+        - generic [ref=e31]:
+          - heading "Live system state" [level=2] [ref=e32]
+          - generic [ref=e33]: supervised
+        - generic [ref=e34]:
+          - generic [ref=e35]:
+            - generic [ref=e36]: Active agents
+            - strong [ref=e37]: "4"
+          - generic [ref=e38]:
+            - generic [ref=e39]: Runs in flight
+            - strong [ref=e40]: "1"
+          - generic [ref=e41]:
+            - generic [ref=e42]: Review queue
+            - strong [ref=e43]: "1"
+          - generic [ref=e44]:
+            - generic [ref=e45]: Average confidence
+            - strong [ref=e46]: 94%
+        - generic [ref=e47]:
+          - generic [ref=e48]: "Publish target: notion"
+          - generic [ref=e49]: "Escalation: confidence-threshold"
+    - generic [ref=e50]:
+      - generic [ref=e51]:
+        - generic [ref=e52]:
+          - generic [ref=e53]: Templates
+          - heading "Workflow library" [level=2] [ref=e54]
+        - paragraph [ref=e55]: Pick a workflow, adjust the objective, and let the agent team route the work end to end.
+      - generic [ref=e56]:
+        - article [ref=e57]:
+          - generic [ref=e58]:
+            - generic [ref=e59]: marketers
+            - generic [ref=e60]: 4 stages
+          - heading "Launch Campaign Studio" [level=3] [ref=e61]
+          - paragraph [ref=e62]: Turn one messy product idea into positioning, research themes, launch copy, and an approval-ready brief.
+          - generic [ref=e63]:
+            - generic [ref=e64]: marketing
+            - generic [ref=e65]: positioning
+            - generic [ref=e66]: launch
+          - paragraph [ref=e67]: "Deliverable: Campaign brief, launch story, and approval checklist"
+          - button "Use this workflow" [ref=e68] [cursor=pointer]
+        - article [ref=e69]:
+          - generic [ref=e70]:
+            - generic [ref=e71]: operators
+            - generic [ref=e72]: 4 stages
+          - heading "Ops War Room" [level=3] [ref=e73]
+          - paragraph [ref=e74]: Break down incidents or recurring operational pain into triage, root causes, runbooks, and escalation rules.
+          - generic [ref=e75]:
+            - generic [ref=e76]: operations
+            - generic [ref=e77]: support
+            - generic [ref=e78]: incident
+          - paragraph [ref=e79]: "Deliverable: Incident brief, route map, and mitigation runbook"
+          - button "Use this workflow" [ref=e80] [cursor=pointer]
+        - article [ref=e81]:
+          - generic [ref=e82]:
+            - generic [ref=e83]: founders
+            - generic [ref=e84]: 4 stages
+          - heading "Founder Decision Desk" [level=3] [ref=e85]
+          - paragraph [ref=e86]: Compare options, surface tradeoffs, and produce a compact decision memo for founders under time pressure.
+          - generic [ref=e87]:
+            - generic [ref=e88]: strategy
+            - generic [ref=e89]: founders
+            - generic [ref=e90]: decision
+          - paragraph [ref=e91]: "Deliverable: Decision memo with risks, recommendation, and next steps"
+          - button "Use this workflow" [ref=e92] [cursor=pointer]
+        - article [ref=e93]:
+          - generic [ref=e94]:
+            - generic [ref=e95]: developers
+            - generic [ref=e96]: 4 stages
+          - heading "Ship Feature Relay" [level=3] [ref=e97]
+          - paragraph [ref=e98]: Convert a vague feature request into implementation scope, dependencies, launch risks, and a release brief.
+          - generic [ref=e99]:
+            - generic [ref=e100]: engineering
+            - generic [ref=e101]: product
+            - generic [ref=e102]: release
+          - paragraph [ref=e103]: "Deliverable: Implementation brief, QA focus list, and release notes outline"
+          - button "Use this workflow" [ref=e104] [cursor=pointer]
+    - generic [ref=e105]:
+      - generic [ref=e106]:
+        - generic [ref=e107]:
+          - generic [ref=e108]:
+            - heading "Mission composer" [level=2] [ref=e109]
+            - generic [ref=e110]: Launch Campaign Studio
+          - strong [ref=e112]: Workflow
+          - combobox "Workflow" [ref=e113]:
+            - option "Launch Campaign Studio" [selected]
+            - option "Ops War Room"
+            - option "Founder Decision Desk"
+            - option "Ship Feature Relay"
+          - strong [ref=e115]: Lead agent
+          - combobox "Lead agent" [ref=e116]:
+            - option "Atlas Story" [selected]
+            - option "Signal Curator"
+            - option "Vector Ops"
+            - option "Relay Console"
+          - strong [ref=e118]: Objective
+          - textbox "Objective" [ref=e119]: Launch a new AI feature for small teams that need faster daily planning.
+          - strong [ref=e121]: Context and constraints
+          - textbox "Context and constraints" [ref=e122]: Add constraints, audience details, or links the agents should respect.
+          - button "Dispatch workflow" [ref=e123] [cursor=pointer]
+        - generic [ref=e124]:
+          - generic [ref=e125]:
+            - heading "Operator controls" [level=2] [ref=e126]
+            - button "Refresh" [ref=e127] [cursor=pointer]
+          - generic [ref=e128]:
+            - generic [ref=e129]:
+              - generic [ref=e130]: Autonomy
+              - combobox "Autonomy" [ref=e131]:
+                - option "Guardrailed"
+                - option "Supervised" [selected]
+                - option "Aggressive"
+            - generic [ref=e132]:
+              - generic [ref=e133]: Publish target
+              - combobox "Publish target" [ref=e134]:
+                - option "Notion" [selected]
+                - option "Slack"
+                - option "Linear"
+                - option "Email"
+            - generic [ref=e135]:
+              - generic [ref=e136]: Escalation
+              - combobox "Escalation" [ref=e137]:
+                - option "Human first"
+                - option "Confidence threshold" [selected]
+                - option "SLA first"
+          - generic [ref=e138]:
+            - button "Auto retry on" [ref=e139] [cursor=pointer]
+            - button "Review gate on" [ref=e140] [cursor=pointer]
+      - generic [ref=e141]:
+        - generic [ref=e142]:
+          - generic [ref=e143]:
+            - heading "Review queue" [level=2] [ref=e144]
+            - generic [ref=e145]: 1 waiting
+          - article [ref=e147]:
+            - generic [ref=e148]:
+              - strong [ref=e149]: Ops War Room / Diagnose why onboarding completion dropped
+              - paragraph [ref=e150]: "Ops War Room: Signal Curator is the lead agent. Confidence is 91%. This workflow is ready to hand off or publish. Ticket evidence conflicts with the product analytics summary."
+            - generic [ref=e151]:
+              - button "Inspect" [ref=e152] [cursor=pointer]
+              - button "Resolve" [ref=e153] [cursor=pointer]
+              - button "Retry" [ref=e154] [cursor=pointer]
+        - generic [ref=e155]:
+          - generic [ref=e156]:
+            - heading "Mission board" [level=2] [ref=e157]
+            - combobox [ref=e158]:
+              - option "All runs" [selected]
+              - option "Completed"
+              - option "Running"
+              - option "Needs review"
+              - option "Failed"
+          - generic [ref=e159]:
+            - button "Ship Feature Relay / Scope and ship an internal review queue wi Implementation brief, QA focus list, and release notes outline Running 94%" [ref=e160] [cursor=pointer]:
+              - generic [ref=e161]:
+                - strong [ref=e162]: Ship Feature Relay / Scope and ship an internal review queue wi
+                - generic [ref=e163]: Implementation brief, QA focus list, and release notes outline
+              - generic [ref=e164]:
+                - generic [ref=e165]: Running
+                - generic [ref=e166]: 94%
+            - button "Ops War Room / Diagnose why onboarding completion dropped Incident brief, route map, and mitigation runbook Needs review 91%" [ref=e167] [cursor=pointer]:
+              - generic [ref=e168]:
+                - strong [ref=e169]: Ops War Room / Diagnose why onboarding completion dropped
+                - generic [ref=e170]: Incident brief, route map, and mitigation runbook
+              - generic [ref=e171]:
+                - generic [ref=e172]: Needs review
+                - generic [ref=e173]: 91%
+            - button "Launch Campaign Studio / Launch a weekly planning copilot for overs Campaign brief, launch story, and approval checklist Completed 96%" [ref=e174] [cursor=pointer]:
+              - generic [ref=e175]:
+                - strong [ref=e176]: Launch Campaign Studio / Launch a weekly planning copilot for overs
+                - generic [ref=e177]: Campaign brief, launch story, and approval checklist
+              - generic [ref=e178]:
+                - generic [ref=e179]: Completed
+                - generic [ref=e180]: 96%
+    - generic [ref=e181]:
+      - generic [ref=e182]:
+        - generic [ref=e183]:
+          - heading "Selected run" [level=2] [ref=e184]
+          - generic [ref=e185]: Running
+        - heading "Ship Feature Relay / Scope and ship an internal review queue wi" [level=3] [ref=e186]
+        - paragraph [ref=e187]: Scope and ship an internal review queue with retry and resolve actions.
+        - paragraph [ref=e188]: Vector Ops coordinated the ship feature relay workflow around "Scope and ship an internal review queue with retry and resolve actions." with 94% confidence and a deliverable aimed at immediate operator use.
+        - generic [ref=e189]:
+          - generic [ref=e190]: "Confidence: 94%"
+          - generic [ref=e191]: "Duration: 1 min"
+          - generic [ref=e192]: "Deliverable: Implementation brief, QA focus list, and release notes outline"
+        - generic [ref=e193]:
+          - generic [ref=e194]:
+            - strong [ref=e195]: Scope solution
+            - generic [ref=e196]: Atlas Story
+          - generic [ref=e197]:
+            - strong [ref=e198]: Inspect constraints
+            - generic [ref=e199]: Vector Ops
+          - generic [ref=e200]:
+            - strong [ref=e201]: Build execution plan
+            - generic [ref=e202]: Relay Console
+          - generic [ref=e203]:
+            - strong [ref=e204]: Review release risk
+            - generic [ref=e205]: Atlas Story
+        - generic [ref=e206]:
+          - generic [ref=e207]:
+            - heading "Agent contributions" [level=4] [ref=e208]
+            - generic [ref=e209]:
+              - article [ref=e210]:
+                - strong [ref=e211]: Atlas Story on Scope solution
+                - paragraph [ref=e212]: Defined the shape of the mission around "Scope and ship an internal review queue with retry and resolve actions." and clarified the audience, expected deliverable, and the decisions the operator will need to make.
+              - article [ref=e213]:
+                - strong [ref=e214]: Vector Ops on Inspect constraints
+                - paragraph [ref=e215]: Converted the workflow into an execution package with ordered steps, handoff boundaries, and the fastest path to a usable outcome.
+              - article [ref=e216]:
+                - strong [ref=e217]: Relay Console on Build execution plan
+                - paragraph [ref=e218]: Reviewed the assembled output for confidence, publication safety, and operator readiness before final delivery.
+          - generic [ref=e219]:
+            - heading "Artifacts" [level=4] [ref=e220]
+            - generic [ref=e221]:
+              - article [ref=e222]:
+                - strong [ref=e223]: Deliverable
+                - paragraph [ref=e224]: Implementation brief, QA focus list, and release notes outline
+              - article [ref=e225]:
+                - strong [ref=e226]: Primary objective
+                - paragraph [ref=e227]: Scope and ship an internal review queue with retry and resolve actions.
+              - article [ref=e228]:
+                - strong [ref=e229]: Publish target
+                - paragraph [ref=e230]: notion
+            - heading "Recommendations" [level=4] [ref=e231]
+            - list [ref=e232]:
+              - listitem [ref=e233]: Move directly into execution and track the first operator checkpoint within one cycle.
+              - listitem [ref=e234]: Package the output into implementation brief, qa focus list, and release notes outline for fast stakeholder review.
+              - listitem [ref=e235]: Keep confidence-threshold active while the team validates the highest-risk assumption.
+      - generic [ref=e236]:
+        - generic [ref=e237]:
+          - generic [ref=e238]:
+            - heading "Agent roster" [level=2] [ref=e239]
+            - generic [ref=e240]: planner
+          - generic [ref=e241]:
+            - article [ref=e242]:
+              - button "Atlas Story Brief design, narrative planning, and audience framing" [ref=e243] [cursor=pointer]:
+                - strong [ref=e244]: Atlas Story
+                - generic [ref=e245]: Brief design, narrative planning, and audience framing
+              - generic [ref=e246]:
+                - generic [ref=e247]: ready
+                - button "Pause" [ref=e248] [cursor=pointer]
+            - article [ref=e249]:
+              - button "Signal Curator Trend analysis, contradiction mapping, and evidence gathering" [ref=e250] [cursor=pointer]:
+                - strong [ref=e251]: Signal Curator
+                - generic [ref=e252]: Trend analysis, contradiction mapping, and evidence gathering
+              - generic [ref=e253]:
+                - generic [ref=e254]: ready
+                - button "Pause" [ref=e255] [cursor=pointer]
+            - article [ref=e256]:
+              - button "Vector Ops Execution planning, routing, and implementation handoff" [ref=e257] [cursor=pointer]:
+                - strong [ref=e258]: Vector Ops
+                - generic [ref=e259]: Execution planning, routing, and implementation handoff
+              - generic [ref=e260]:
+                - generic [ref=e261]: ready
+                - button "Pause" [ref=e262] [cursor=pointer]
+            - article [ref=e263]:
+              - button "Relay Console Review gates, escalation design, and operator summaries" [ref=e264] [cursor=pointer]:
+                - strong [ref=e265]: Relay Console
+                - generic [ref=e266]: Review gates, escalation design, and operator summaries
+              - generic [ref=e267]:
+                - generic [ref=e268]: degraded
+                - button "Pause" [ref=e269] [cursor=pointer]
+          - generic [ref=e270]:
+            - heading "Atlas Story" [level=3] [ref=e271]
+            - paragraph [ref=e272]: Breaks fuzzy requests into clear plans, tradeoffs, and a human-readable execution narrative.
+            - generic [ref=e273]:
+              - generic [ref=e274]: "Success rate: 95%"
+              - generic [ref=e275]: "Queue depth: 2"
+              - generic [ref=e276]: "Latency: 1800ms"
+            - paragraph [ref=e277]: "Ideal for: Launch briefs, Stakeholder updates, Marketing plans"
+            - paragraph [ref=e278]: "Last summary: Atlas Story coordinated the launch campaign studio workflow around \"Launch a weekly planning copilot for overstretched startup teams.\" with 96% confidence and a deliverable aimed at immediate operator use."
+        - generic [ref=e279]:
+          - generic [ref=e280]:
+            - heading "Sandbox duel" [level=2] [ref=e281]
+            - generic [ref=e282]: playground
+          - paragraph [ref=e283]: A playful stress test that deliberately perturbs agent confidence and queue pressure.
+          - generic [ref=e284]:
+            - combobox [ref=e285]:
+              - option "Atlas Story" [selected]
+              - option "Signal Curator"
+              - option "Vector Ops"
+              - option "Relay Console"
+            - combobox [ref=e286]:
+              - option "Atlas Story"
+              - option "Signal Curator" [selected]
+              - option "Vector Ops"
+              - option "Relay Console"
+          - generic [ref=e287]:
+            - button "Run duel" [ref=e288] [cursor=pointer]
+            - button "Pulse board" [ref=e289] [cursor=pointer]
+    - generic [ref=e290]:
+      - generic [ref=e291]:
+        - generic [ref=e292]:
+          - generic [ref=e293]: Architecture
+          - heading "How the system works" [level=2] [ref=e294]
+        - paragraph [ref=e295]: "This project follows the core multi-agent pattern from the DEV track: focused roles, orchestration, visible handoffs, and explicit review gates."
+      - generic [ref=e296]:
+        - article [ref=e297]:
+          - heading "Brief to Workflow" [level=3] [ref=e298]
+          - paragraph [ref=e299]:
+            - strong [ref=e300]: "Trigger:"
+            - text: Objective is broad, ambiguous, or spans multiple disciplines.
+          - paragraph [ref=e301]:
+            - strong [ref=e302]: "Response:"
+            - text: Planner defines scope, researcher gathers signal, builder packages execution, reviewer checks risk.
+        - article [ref=e303]:
+          - heading "Evidence Before Output" [level=3] [ref=e304]
+          - paragraph [ref=e305]:
+            - strong [ref=e306]: "Trigger:"
+            - text: Operator needs justification, not just an answer.
+          - paragraph [ref=e307]:
+            - strong [ref=e308]: "Response:"
+            - text: Research notes, contradictions, and confidence cues are surfaced before the final recommendation.
+        - article [ref=e309]:
+          - heading "Guarded Autonomy" [level=3] [ref=e310]
+          - paragraph [ref=e311]:
+            - strong [ref=e312]: "Trigger:"
+            - text: Confidence is weak or publish risk is high.
+          - paragraph [ref=e313]:
+            - strong [ref=e314]: "Response:"
+            - text: Runs stop at review with publish target constraints attached to the operator brief.
+        - article [ref=e315]:
+          - heading "Execution Packaging" [level=3] [ref=e316]
+          - paragraph [ref=e317]:
+            - strong [ref=e318]: "Trigger:"
+            - text: User needs something they can act on immediately.
+          - paragraph [ref=e319]:
+            - strong [ref=e320]: "Response:"
+            - text: Output is converted into deliverables, artifacts, and next-step recommendations.
+    - generic [ref=e321]:
+      - paragraph [ref=e322]: Built as a deployable multi-agent system demo and starter for Vercel.
+      - paragraph [ref=e323]: Use the README for setup, deployment, GitHub handoff, and DEV post guidance.
+  - alert [ref=e7]

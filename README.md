@@ -1,101 +1,126 @@
-# Multi-Agent Studio
+# Multi Agent Studio
 
-A fully functional Next.js multi-agent system that turns one broad user request into a visible planner, researcher, builder, and reviewer workflow.
+A fully functional Next.js multi agent system that turns one broad user request into a visible planner, researcher, builder, and reviewer workflow.
 
 Live app: https://ai-agents-duel.vercel.app
 
 GitHub: https://github.com/aniruddhaadak80/ai-agents-duel
 
-This project was rebuilt around the core ideas from the DEV Education track on building multi-agent systems: specialization, orchestration, explicit handoffs, and review gates. Instead of one giant prompt, the app gives users a workflow library, agent controls, a review queue, and inspectable run details.
+This project was rebuilt around the core ideas from the DEV Education track on building multi agent systems. The focus is on specialization, orchestration, explicit handoffs, and review gates. Instead of one giant prompt, the app gives users a workflow library, agent controls, a review queue, and inspectable run details.
 
 ## What the app does
 
-Multi-Agent Studio is aimed at users who need practical help turning fuzzy work into structured output.
+Multi Agent Studio is aimed at users who need practical help turning fuzzy work into structured output.
 
-It ships with four workflow templates:
+It ships with four workflow templates.
+1. Launch Campaign Studio
+2. Ops War Room
+3. Founder Decision Desk
+4. Ship Feature Relay
 
-- Launch Campaign Studio
-- Ops War Room
-- Founder Decision Desk
-- Ship Feature Relay
+Each run produces a workflow title and objective.
+It also shows stage by stage ownership and agent contributions.
+You can view deliverable artifacts, recommendations, and the operator brief.
+It will show the review or completion state.
 
-Each run produces:
+The app runs locally with an in memory orchestration engine.
+It optionally upgrades itself with Gemini output when GEMINI_API_KEY is configured.
 
-- A workflow title and objective
-- Stage-by-stage ownership
-- Agent contributions
-- Deliverable artifacts
-- Recommendations and operator brief
-- Review or completion state
+## Visual Overview
 
-The app runs locally with an in-memory orchestration engine and optionally upgrades itself with Gemini output when `GEMINI_API_KEY` is configured.
+Here is a look at the live application.
+
+<img src="./public/images/docs/hero-live.png" alt="Hero Interface" width="100%" />
+
+You can browse the available templates in the Workflow Library.
+
+<img src="./public/images/docs/workflow-library.png" alt="Workflow Library" width="100%" />
+
+The Mission Board provides a clear view of your active tasks and agent assignments.
+
+<img src="./public/images/docs/mission-board.png" alt="Mission Board" width="100%" />
+
+You can inspect the exact output and thought process in the Run Detail view.
+
+<img src="./public/images/docs/run-detail.png" alt="Run Detail" width="100%" />
 
 ## Core features
 
-- Workflow-first orchestration instead of a single prompt box
-- Multiple specialized agents with visible roles and status
-- Review queue with resolve and retry actions
-- Operator controls for autonomy mode, publish target, and escalation policy
-- Sandbox tools for queue pulse and agent duel stress testing
-- Responsive sketchbook-style UI that works on desktop and mobile
-- Zero-database setup for fast local runs and Vercel deployment
+1. Workflow first orchestration instead of a single prompt box.
+2. Multiple specialized agents with visible roles and status.
+3. Review queue with resolve and retry actions.
+4. Operator controls for autonomy mode, publish target, and escalation policy.
+5. Sandbox tools for queue pulse and agent duel stress testing.
+6. Responsive sketchbook style UI that works on desktop and mobile.
+7. Zero database setup for fast local runs and Vercel deployment.
 
 ## Tech stack
 
-- Next.js 16
-- React 19
-- TypeScript
-- Pure CSS
-- Optional Gemini enrichment via `@google/genai`
-- Vercel deployment target
+* 🚀 **Next.js 16** for the core framework.
+* ⚛️ **React 19** for building user interfaces.
+* 📘 **TypeScript** for static typing and safer code.
+* 🎨 **Pure CSS** for styling without heavy libraries.
+* 🧠 **@google/genai** using **gemini-3-flash-preview** for optional AI enrichment.
+* ☁️ **Vercel** for seamless deployment.
+
+## System Flowchart
+
+Here is an interactive flowchart showing how the system processes a request.
+
+```mermaid
+graph TD
+    A[User Selects Workflow Template] --> B[Lead Agent Starts Mission]
+    B --> C[Atlas Story Plans Mission]
+    C --> D[Signal Curator Gathers Evidence]
+    D --> E[Vector Ops Creates Execution Package]
+    E --> F[Relay Console Reviews Confidence]
+    F --> G{Operator Controls applied}
+    G --> H[Results shown on Mission Board]
+    H --> I[Gemini 3 Flash Preview Enriches Output]
+```
 
 ## Local development
 
-1. Install dependencies.
+First, install dependencies.
 
 ```bash
 npm install
 ```
 
-2. Create a local env file if you want Gemini-powered enrichment.
+Next, create a local env file if you want Gemini powered enrichment.
 
 ```bash
 copy .env.example .env.local
 ```
 
-3. Start the dev server.
+Then, start the dev server.
 
 ```bash
 npm run dev
 ```
 
-4. Open `http://localhost:3000`.
+Finally, open your browser to `http://localhost:3000`.
 
 ## Environment variables
 
-| Name | Required | Purpose |
-| --- | --- | --- |
-| `GEMINI_API_KEY` | No | Enables Gemini enrichment for generated run output |
-
-If the key is missing, the app still works using the local multi-agent orchestration engine.
+The `GEMINI_API_KEY` is not required but it enables Gemini enrichment for generated run output.
+If the key is missing, the app still works using the local multi agent orchestration engine.
 
 ## How the orchestration works
 
-The app uses four fixed roles:
+The app uses four fixed roles.
+Atlas Story plans the mission and frames the deliverable.
+Signal Curator gathers evidence, tensions, and contradictions.
+Vector Ops turns the plan into an execution package.
+Relay Console reviews confidence, risk, and operator readiness.
 
-- `Atlas Story` plans the mission and frames the deliverable.
-- `Signal Curator` gathers evidence, tensions, and contradictions.
-- `Vector Ops` turns the plan into an execution package.
-- `Relay Console` reviews confidence, risk, and operator readiness.
-
-A run follows this shape:
-
-1. The user selects a workflow template.
-2. A lead agent starts the workflow.
-3. The store expands the objective into stages, contributions, artifacts, and recommendations.
-4. Operator controls influence confidence, review gating, and publish behavior.
-5. The result is shown in the mission board and review queue.
-6. If Gemini is configured, the selected agent can enrich the final output.
+A run follows a clear shape.
+First, the user selects a workflow template.
+Second, a lead agent starts the workflow.
+Third, the store expands the objective into stages, contributions, artifacts, and recommendations.
+Fourth, operator controls influence confidence, review gating, and publish behavior.
+Fifth, the result is shown in the mission board and review queue.
+Finally, if Gemini is configured, the selected agent can enrich the final output.
 
 ## Project structure
 
