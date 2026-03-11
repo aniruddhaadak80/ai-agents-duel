@@ -24,7 +24,7 @@ If deployed, this section can embed the live Vercel app.
 
 ```html
 <iframe
-  src="https://your-vercel-url.vercel.app"
+  src="https://ai-agents-duel.vercel.app"
   width="100%"
   height="720"
   style="border: 1px solid #ddd; border-radius: 12px;"
@@ -114,8 +114,8 @@ Another challenge was keeping the project easy to deploy. I chose an in-memory b
 
 ## Repository
 
-Add your repository URL here.
+https://github.com/aniruddhaadak80/ai-agents-duel
 
 ## Deployment
 
-Add your Vercel deployment URL here.
+https://ai-agents-duel.vercel.app

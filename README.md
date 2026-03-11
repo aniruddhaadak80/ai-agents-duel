@@ -2,6 +2,10 @@
 
 A fully functional Next.js multi-agent system that turns one broad user request into a visible planner, researcher, builder, and reviewer workflow.
 
+Live app: https://ai-agents-duel.vercel.app
+
+GitHub: https://github.com/aniruddhaadak80/ai-agents-duel
+
 This project was rebuilt around the core ideas from the DEV Education track on building multi-agent systems: specialization, orchestration, explicit handoffs, and review gates. Instead of one giant prompt, the app gives users a workflow library, agent controls, a review queue, and inspectable run details.
 
 ## What the app does
