@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createRun, getDashboardSnapshot, updateRunRealAI } from "@/lib/agent-duel/store";
 import { CreateRunInput } from "@/lib/agent-duel/types";
 import { GoogleGenAI } from "@google/genai";
@@ -6,7 +6,15 @@ import { GoogleGenAI } from "@google/genai";
 const geminiApiKey = process.env.GEMINI_API_KEY;
 const ai = geminiApiKey ? new GoogleGenAI({ apiKey: geminiApiKey }) : null;
 
-export async function POST(request: NextRequest) {
+const DEFAULT_PERSONA = "You are a pragmatic multi-agent systems assistant.";
+const AGENT_PERSONAS: Record<string, string> = {
+  "atlas-story": "You are Atlas Story. You turn raw constraints into clean briefs, launch narratives, and stakeholder-ready recommendations.",
+  "signal-curator": "You are Signal Curator. You gather evidence, map contradictions, and highlight risks before recommendations are made.",
+  "vector-ops": "You are Vector Ops. You turn requirements into execution plans, implementation checklists, and launch-ready delivery packages.",
+  "relay-console": "You are Relay Console. You review output quality, summarize risk, and produce concise approval notes for operators.",
+};
+
+export async function POST(request: Request) {
   try {
     const payload = (await request.json()) as Partial<CreateRunInput>;
 
@@ -25,14 +33,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ run, snapshot: getDashboardSnapshot(), enrichedByModel: false });
     }
 
-    let persona = "You are a pragmatic multi-agent systems assistant.";
-    if (run.agentId === "atlas-story") persona = "You are Atlas Story. You turn raw constraints into clean briefs, launch narratives, and stakeholder-ready recommendations.";
-    if (run.agentId === "signal-curator") persona = "You are Signal Curator. You gather evidence, map contradictions, and highlight risks before recommendations are made.";
-    if (run.agentId === "vector-ops") persona = "You are Vector Ops. You turn requirements into execution plans, implementation checklists, and launch-ready delivery packages.";
-    if (run.agentId === "relay-console") persona = "You are Relay Console. You review output quality, summarize risk, and produce concise approval notes for operators.";
+    const persona = AGENT_PERSONAS[run.agentId] || DEFAULT_PERSONA;
 
     const prompt = [
-      persona,
       `Workflow: ${run.title}`,
       `Objective: ${run.objective}`,
       `Context: ${run.context || "No additional context provided."}`,
@@ -42,20 +45,25 @@ export async function POST(request: NextRequest) {
 
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: prompt,
+        model: "gemini-1.5-flash",
+        config: {
+          systemInstruction: { parts: [{ text: persona }] }
+        },
+        contents: [
+          { role: "user", parts: [{ text: prompt }] }
+        ]
       });
 
       const realText = response.text || "Execution complete. No output generated.";
       updateRunRealAI(run.id, realText);
     } catch (llmError) {
       console.error("Gemini Error:", llmError);
-      updateRunRealAI(run.id, "Real AI Execution Failed. " + String(llmError));
+      updateRunRealAI(run.id, "Real AI Execution Failed");
     }
 
     return NextResponse.json({ run, snapshot: getDashboardSnapshot(), enrichedByModel: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to create run.";
-    return NextResponse.json({ error: message }, { status: 400 });
+    console.error("Failed to create run:", error);
+    return NextResponse.json({ error: "Failed to create run." }, { status: 400 });
   }
 }

@@ -1,14 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { updateControls } from "@/lib/agent-duel/store";
 import { UpdateControlInput } from "@/lib/agent-duel/types";
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     const payload = (await request.json()) as UpdateControlInput;
     const snapshot = updateControls(payload);
     return NextResponse.json(snapshot);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to update controls.";
-    return NextResponse.json({ error: message }, { status: 400 });
+    console.error("Failed to update controls:", error);
+    return NextResponse.json({ error: "Failed to update controls." }, { status: 400 });
   }
 }
