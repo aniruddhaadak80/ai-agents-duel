@@ -10,6 +10,7 @@ export async function POST(request: Request) {
     const result = triggerDuel(agent1Id, agent2Id);
     return NextResponse.json(result);
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Duel failed." }, { status: 500 });
+    console.error("Duel Error:", error);
+    return NextResponse.json({ error: "Duel failed." }, { status: 500 });
   }
 }

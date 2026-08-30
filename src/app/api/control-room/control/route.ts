@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     const snapshot = updateControls(payload);
     return NextResponse.json(snapshot);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to update controls.";
-    return NextResponse.json({ error: message }, { status: 400 });
+    console.error("Control Update Error:", error);
+    return NextResponse.json({ error: "Failed to update controls." }, { status: 400 });
   }
 }
