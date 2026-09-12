@@ -1,3 +1,5 @@
+import { secureRandom } from "@/lib/agent-duel/crypto";
+
 import {
   AgentProfile,
   AgentRun,
@@ -617,8 +619,8 @@ export function triggerDuel(agent1Id: string, agent2Id: string) {
     throw new Error("Invalid combatants for duel.");
   }
 
-  const a1Score = a1.successRate - a1.queueDepth * 2 + Math.random() * 8;
-  const a2Score = a2.successRate - a2.queueDepth * 2 + Math.random() * 8;
+  const a1Score = a1.successRate - a1.queueDepth * 2 + secureRandom() * 8;
+  const a2Score = a2.successRate - a2.queueDepth * 2 + secureRandom() * 8;
   const winner = a1Score >= a2Score ? a1 : a2;
   const loser = a1Score >= a2Score ? a2 : a1;
 
